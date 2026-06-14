@@ -1,0 +1,189 @@
+<?php
+
+/*
+ * Copyright (c) 2026 Besnovatyj. Licensed under the MIT License.
+ */
+
+declare(strict_types=1);
+
+/**
+ * @var yii\web\View $this
+ * @var modules\modmanNew\forms\backend\search\ModuleSearch $search
+ * @var modules\modmanNew\ModuleView[] $modules
+ * @var modules\modmanNew\catalog\source\DiscoveredPackage[] $packages
+ * @var array<string, modules\modmanNew\registry\ModuleState> $pending
+ */
+
+use yii\helpers\Html;
+use yii\helpers\Url;
+
+$this->title = 'Управление модулями (новая система)';
+
+/** Бейдж статуса модуля. */
+$statusBadge = static function (string $status): string {
+    $map = [
+        'installed' => 'text-bg-success',
+        'discovered' => 'text-bg-secondary',
+        'failed' => 'text-bg-danger',
+        'installing' => 'text-bg-warning',
+        'updating' => 'text-bg-warning',
+        'removing' => 'text-bg-warning',
+    ];
+    $class = $map[$status] ?? 'text-bg-secondary';
+    return Html::tag('span', Html::encode($status), ['class' => "badge {$class}"]);
+};
+
+/** POST-кнопка действия (с CSRF и подтверждением). */
+$postButton = static function (string $action, string $moduleId, string $label, string $btnClass, ?string $confirm = null): string {
+    $form = Html::beginForm([$action], 'post', ['class' => 'd-inline']);
+    $form .= Html::hiddenInput('moduleId', $moduleId);
+    $form .= Html::submitButton($label, [
+        'class' => "btn btn-sm {$btnClass}",
+        'data' => $confirm !== null ? ['confirm' => $confirm] : [],
+    ]);
+    $form .= Html::endForm();
+    return $form;
+};
+?>
+
+<div class="modman-new-index">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h1 class="h3 mb-0"><i class="bi bi-bricks me-2"></i><?= Html::encode($this->title) ?></h1>
+        <div class="d-flex gap-2">
+            <?= $postButton('recompile', '', 'Пересобрать конфиг', 'btn-outline-secondary') ?>
+            <?php if ($pending !== []): ?>
+                <?= $postButton('reconcile', '', 'Сверка (' . count($pending) . ')', 'btn-warning', 'Откатить незавершённые операции к чистому состоянию?') ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <p class="text-muted small">
+        Фантомная система управления модулями. Артефакты компилируются в файлы с суффиксом
+        <code>_new</code> и не влияют на работу приложения, которым управляет старый <code>modman</code>.
+    </p>
+
+    <?php if ($pending !== []): ?>
+        <div class="alert alert-warning">
+            <strong>Незавершённые операции:</strong>
+            <?= Html::encode(implode(', ', array_keys($pending))) ?>.
+            Рекомендуется выполнить «Сверку».
+        </div>
+    <?php endif; ?>
+
+    <?= Html::beginForm(['index'], 'get', ['class' => 'mb-3']) ?>
+    <div class="input-group" style="max-width: 420px;">
+        <?= Html::activeTextInput($search, 'q', ['class' => 'form-control', 'placeholder' => 'Поиск по id / пакету…']) ?>
+        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-outline-primary']) ?>
+    </div>
+    <?= Html::endForm() ?>
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-modules" type="button">
+                Модули <span class="badge text-bg-light"><?= count($modules) ?></span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-packages" type="button">
+                Пакеты <span class="badge text-bg-light"><?= count($packages) ?></span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-3">
+        <div class="tab-pane fade show active" id="tab-modules">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Пакет</th>
+                        <th>Статус</th>
+                        <th>Версия (доступна / установлена)</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($modules as $m): ?>
+                        <tr>
+                            <td><code><?= Html::encode($m->id) ?></code></td>
+                            <td class="text-muted small"><?= Html::encode($m->package) ?></td>
+                            <td>
+                                <?= $statusBadge($m->status) ?>
+                                <?php if ($m->orphan): ?>
+                                    <span class="badge text-bg-dark" title="Пакет не найден в каталоге">orphan</span>
+                                <?php endif; ?>
+                                <?php if ($m->hasUpdate): ?>
+                                    <span class="badge text-bg-info">обновление</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?= Html::encode($m->availableVersion ?: '—') ?>
+                                <span class="text-muted">/</span>
+                                <?= Html::encode($m->installedVersion ?? '—') ?>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                    <?php if (!$m->orphan): ?>
+                                        <?= Html::a('План', ['check', 'moduleId' => $m->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
+                                    <?php endif; ?>
+
+                                    <?php if (!$m->installed && !$m->orphan): ?>
+                                        <?= $postButton('install', $m->id, 'Установить', 'btn-success') ?>
+                                    <?php endif; ?>
+
+                                    <?php if ($m->installed && $m->hasUpdate): ?>
+                                        <?= $postButton('update', $m->id, 'Обновить', 'btn-primary') ?>
+                                    <?php endif; ?>
+
+                                    <?php if ($m->installed && $m->editable): ?>
+                                        <?= $postButton('uninstall', $m->id, 'Удалить', 'btn-outline-danger', "Удалить модуль «{$m->id}»?") ?>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if ($modules === []): ?>
+                        <tr><td colspan="5" class="text-center text-muted py-4">Модули не найдены.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-packages">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle">
+                    <thead>
+                    <tr>
+                        <th>Composer-пакет</th>
+                        <th>Тип</th>
+                        <th>moduleId</th>
+                        <th>Версия</th>
+                        <th>Источник</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($packages as $p): ?>
+                        <tr>
+                            <td>
+                                <?= Html::encode($p->composerName) ?>
+                                <?php if ($p->description !== ''): ?>
+                                    <div class="text-muted small"><?= Html::encode($p->description) ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td class="small"><?= Html::encode($p->type) ?></td>
+                            <td><?= $p->isModule() ? '<code>' . Html::encode((string)$p->moduleId) . '</code>' : '<span class="text-muted">—</span>' ?></td>
+                            <td class="small"><?= Html::encode($p->composerVersion ?: '—') ?></td>
+                            <td><span class="badge text-bg-light"><?= Html::encode($p->sourceLabel) ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if ($packages === []): ?>
+                        <tr><td colspan="5" class="text-center text-muted py-4">Пакеты не найдены.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

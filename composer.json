@@ -1,0 +1,22 @@
+{
+  "name": "modules/modman-new",
+  "description": "Новая система управления модулями CMS (compile-not-patch). Переходная замена modules/modman.",
+  "type": "yii2-extension",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.4",
+    "yiisoft/yii2": "~2.0.0"
+  },
+  "suggest": {
+    "composer/semver": "Полноценная проверка ограничений версий (^, ~, диапазоны) в зависимостях модулей"
+  },
+  "extra": {
+    "moduleClass": "modules\\modmanNew\\Module",
+    "moduleId": "modmanNew"
+  },
+  "autoload": {
+    "psr-4": {
+      "modules\\modmanNew\\": ""
+    }
+  }
+}

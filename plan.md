@@ -76,16 +76,18 @@
 ## Фаза 8. События (`events/`) — ✅
 - [x] `LifecyclePhase` (enum), `ModuleLifecycleEvent`, `ModuleLifecycleDispatcher`
 
-## Фаза 9. Веб-интерфейс и драйверы
-- [ ] `controllers/backend/ModulesController` (полноценный UI: список, check/plan, install, uninstall, update, reconcile)
-- [ ] `forms/backend/search/ModuleSearch`
-- [ ] `views/backend/modules/*` (Bootstrap 5, HTMX-дружелюбно)
-- [ ] `commands/ModmanController` — вторичный CLI-драйвер поверх тех же хендлеров
+## Фаза 9. Веб-интерфейс и драйверы — ✅
+- [x] `ModuleManager` (фасад) + `ModuleView` (DTO для UI)
+- [x] `controllers/backend/ModulesController` (список, check/plan, install, uninstall, update, reconcile, recompile)
+- [x] `forms/backend/search/ModuleSearch`
+- [x] `views/backend/modules/*` (Bootstrap 5: index с вкладками + plan)
+- [x] `commands/ModulesController` — вторичный CLI-драйвер поверх того же фасада
 
-## Фаза 10. Сборка модуля
-- [ ] `Module.php`, `Bootstrap.php`, `config/*`, `composer.json`, `README.md`, `.gitignore`
-- [ ] DI-контейнер (`config/container.php`), adminMenu, params (пути артефактов, scan dirs)
-- [ ] Коммит в git
+## Фаза 10. Сборка модуля — ✅
+- [x] `Module.php`, `Bootstrap.php`, `config/*`, `composer.json`, `README.md`, `.gitignore`
+- [x] DI-контейнер (`config/container.php`), adminMenu, params (пути артефактов, scan dirs)
+- [x] Коммит в git
+- [ ] Проверка `php -l` в Docker (за пользователем) + подключение к приложению по README
 
 ## Фаза 11. Тестовые пакеты (после готовности modmanNew)
 - [ ] `yii2-cms-shortcode-new` (эталонная конверсия, минимальный модуль)
