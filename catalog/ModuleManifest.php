@@ -27,6 +27,7 @@ final readonly class ModuleManifest
      * @param Version        $version      версия модуля
      * @param bool           $editable     управляем ли модуль через менеджер
      * @param array          $config       базовая конфигурация Yii-модуля (id, params, ...)
+     * @param string         $iconClass    CSS-класс иконки модуля (из config.params.iconClass) для списка
      * @param Requirements   $requirements зависимости
      * @param Contributions  $contributions вклады в приложение
      * @param string         $path         абсолютный путь к директории пакета
@@ -39,6 +40,7 @@ final readonly class ModuleManifest
         public Version       $version,
         public bool          $editable,
         public array         $config,
+        public string        $iconClass,
         public Requirements  $requirements,
         public Contributions $contributions,
         public string        $path,

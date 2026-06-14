@@ -80,6 +80,9 @@ final class ManifestFactory
             );
         }
 
+        $config = $class::moduleConfig();
+        $iconClass = (string)($config['params']['iconClass'] ?? '');
+
         $version = new Version($class::moduleVersion());
         $requirements = $this->implementsContract($class, ProvidesDependencies::class)
             ? Requirements::fromArray($class::dependencies())
@@ -102,7 +105,8 @@ final class ManifestFactory
             moduleClass: $class,
             version: $version,
             editable: $class::isEditable(),
-            config: $class::moduleConfig(),
+            config: $config,
+            iconClass: $iconClass,
             requirements: $requirements,
             contributions: $contributions,
             path: $package->path,

@@ -110,6 +110,7 @@ final class ModuleManager
                 editable: $manifest->editable,
                 installed: $installed,
                 hasUpdate: $hasUpdate,
+                iconClass: $manifest->iconClass,
                 system: $system,
             );
         }

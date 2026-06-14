@@ -8,11 +8,11 @@ declare(strict_types=1);
 
 namespace modules\modmanNew;
 
+use common\components\module\CmsModule;
 use modules\modmanNew\contract\DeclaresModule;
 use modules\modmanNew\contract\ProvidesAdminMenu;
 use modules\modmanNew\contract\ProvidesLogChannels;
 use Yii;
-use yii\base\Module as YiiModule;
 
 /**
  * Модуль новой системы управления модулями.
@@ -31,19 +31,18 @@ use yii\base\Module as YiiModule;
  * `modules\modmanNew\controllers`, путь `backend/modules` резолвится в controllers\backend\ModulesController).
  * Console-маршруты: `modmanNew/modules/...` (controllerNamespace переключается на commands).
  */
-final class Module extends YiiModule implements DeclaresModule, ProvidesAdminMenu, ProvidesLogChannels
+final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMenu, ProvidesLogChannels
 {
     /** Версия менеджера — источник истины для отображения и будущего самообновления. */
     public const string VERSION = '1.0.0';
 
     public function init(): void
     {
+        // Раскладку controllerNamespace (в т.ч. console → \commands) и layout даёт CmsModule.
         parent::init();
 
-        if (Yii::$app->id === 'app-console') {
-            $this->controllerNamespace = __NAMESPACE__ . '\\commands';
-        }
-
+        // Страховка DI на случай, если Bootstrap не добавлен в app bootstrap, — чтобы web-контроллёр
+        // всё равно работал. Основная проводка живёт в Bootstrap; здесь guard от повторного прогона.
         if (!Yii::$container->has(ModuleManager::class)) {
             (require __DIR__ . '/config/container.php')(Yii::$container);
         }

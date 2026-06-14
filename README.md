@@ -107,11 +107,15 @@ php yii modmanNew/modules/recompile
 Модуль реализует `DeclaresModule` и нужные `Provides*` (статические методы — discovery не инстанцирует
 класс). Пример минимального модуля:
 
+Модуль наследует тонкий рантайм-базовый класс `common\components\module\CmsModule` (даёт раскладку
+controllerNamespace и layout из темы) и реализует нужные контракты:
+
 ```php
+use common\components\module\CmsModule;
 use modules\modmanNew\contract\DeclaresModule;
 use modules\modmanNew\contract\ProvidesMigrations;
 
-final class Module extends \yii\base\Module implements DeclaresModule, ProvidesMigrations
+final class Module extends CmsModule implements DeclaresModule, ProvidesMigrations
 {
     public static function moduleId(): string { return 'ShortcodeNew'; }
     public static function moduleVersion(): string { return '1.0.0'; }
