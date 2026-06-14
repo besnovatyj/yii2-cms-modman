@@ -1,4 +1,4 @@
-# modmanNew — новая система управления модулями
+# modman — система управления модулями
 
 Переработанная (compile-not-patch) система управления модулями CMS. Сосуществует со старым
 `app/modules/modman`, не влияя на его работу: компилирует собственные артефакты с суффиксом `_new`
@@ -32,8 +32,8 @@ ModuleManager.php  фасад — единый публичный API для д�
 `modules` приложения):
 
 ```php
-'modmanNew' => [
-    'class' => \modules\modmanNew\Module::class,
+'modman' => [
+    'class' => \modules\modman\Module::class,
 ],
 ```
 
@@ -46,7 +46,7 @@ ModuleManager.php  фасад — единый публичный API для д�
 DI и шина событий поднимались рано:
 
 ```php
-\modules\modmanNew\Bootstrap::class,
+\modules\modman\Bootstrap::class,
 ```
 
 > Шаг 2 необязателен для работы веб-интерфейса (Module::init поднимает DI как страховку), но нужен,
@@ -56,7 +56,7 @@ DI и шина событий поднимались рано:
 работали в приложении. В `app/common/config/main.php`, рядом с подключением оригинальных артефактов:
 
 ```php
-// Дополнительно к основным модулям — те, что установлены через modmanNew.
+// Дополнительно к основным модулям — те, что установлены через modman.
 $modulesNew = @include Yii::getAlias('@config-dyn-gen/modulesConfigFile_new.php');
 if (is_array($modulesNew)) {
     $modules = array_merge($modules, $modulesNew);
@@ -69,21 +69,21 @@ if (is_array($modulesNew)) {
 
 ## Использование
 
-**Веб:** `/modmanNew/backend/modules/index` — список модулей/пакетов, «План» (dry-run), установка,
+**Веб:** `/modman/backend/modules/index` — список модулей/пакетов, «План» (dry-run), установка,
 обновление, удаление, «Сверка» (reconcile), «Пересобрать конфиг».
 
 **Консоль:**
 
 ```
-php yii modmanNew/modules/list
-php yii modmanNew/modules/check <moduleId>
-php yii modmanNew/modules/install <moduleId>
-php yii modmanNew/modules/update <moduleId>
-php yii modmanNew/modules/uninstall <moduleId>
-php yii modmanNew/modules/reconcile
-php yii modmanNew/modules/recompile
-php yii modmanNew/menu/info       # диагностика локаций меню (вкл/выкл, файл, существование, число пунктов)
-php yii modmanNew/menu/rebuild    # перекомпилировать только артефакты меню
+php yii modman/modules/list
+php yii modman/modules/check <moduleId>
+php yii modman/modules/install <moduleId>
+php yii modman/modules/update <moduleId>
+php yii modman/modules/uninstall <moduleId>
+php yii modman/modules/reconcile
+php yii modman/modules/recompile
+php yii modman/menu/info       # диагностика локаций меню (вкл/выкл, файл, существование, число пунктов)
+php yii modman/menu/rebuild    # перекомпилировать только артефакты меню
 ```
 
 (Для консоли модуль также должен быть в `modules` console-приложения.)
@@ -107,7 +107,7 @@ php yii modmanNew/menu/rebuild    # перекомпилировать толь�
 
 Пакет без маркера менеджер игнорирует. Модуль, помеченный `kind: module`, но ещё не переведённый на
 новый контракт (или с ошибкой конфигурации), показывается строкой с причиной и погашенной кнопкой
-установки; подробности уходят в лог-канал `modmanNew/*`, а не во flash на всю страницу.
+установки; подробности уходят в лог-канал `modman/*`, а не во flash на всю страницу.
 
 ## Контракт модуля (новый)
 
@@ -119,8 +119,8 @@ controllerNamespace и layout из темы) и реализует нужные 
 
 ```php
 use common\components\module\CmsModule;
-use modules\modmanNew\contract\DeclaresModule;
-use modules\modmanNew\contract\ProvidesMigrations;
+use modules\modman\contract\DeclaresModule;
+use modules\modman\contract\ProvidesMigrations;
 
 final class Module extends CmsModule implements DeclaresModule, ProvidesMigrations
 {
@@ -144,23 +144,23 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 }
 ```
 
-> **Размещение контрактов.** Сейчас они в `modmanNew/contract/` (для целостности репозитория и diff).
+> **Размещение контрактов.** Сейчас они в `modman/contract/` (для целостности репозитория и diff).
 > В продакшене (после cutover) их следует «повысить» в `common\components\module\`, чтобы модули не
 > зависели от менеджера.
 
-> **Сам менеджер — обычный модуль.** `modmanNew/Module` реализует тот же `DeclaresModule` с
+> **Сам менеджер — обычный модуль.** `modman/Module` реализует тот же `DeclaresModule` с
 > `isEditable() === false`: он виден в общем списке как «системный» (с версией, без кнопок
 > установки/удаления), а не как исключение. Бутстрапится приложением вручную (шаги 1–2 выше).
 
 ## Проверка синтаксиса (Docker)
 
 ```
-docker compose exec php sh -c 'find /home/node/app/modules/modmanNew -name "*.php" -not -path "*/.git/*" -print0 | xargs -0 -n1 -P4 php -l'
+docker compose exec php sh -c 'find /home/node/app/modules/modman -name "*.php" -not -path "*/.git/*" -print0 | xargs -0 -n1 -P4 php -l'
 ```
 
 ## Cutover (план перехода)
 
 1. Перевести существующие модули на новый контракт (capability-интерфейсы), убрать `*_new`-суффиксы.
 2. В `ArtifactPaths`/`params.php` заменить `_new`-пути на канонические.
-3. `php yii modmanNew/modules/recompile`.
+3. `php yii modman/modules/recompile`.
 4. Удалить старый `app/modules/modman`. Контракты перенести в `common`.

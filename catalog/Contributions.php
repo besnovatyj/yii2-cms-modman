@@ -6,13 +6,13 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog;
+namespace modules\modman\catalog;
 
 /**
  * Вклады модуля в приложение — то, что модуль добавляет в производные конфиги при установке.
  *
  * Собирается {@see ManifestFactory} из реализованных модулем capability-контрактов. Поля, для
- * которых модуль не реализовал контракт, остаются пустыми. Компилятор {@see \modules\modmanNew\compiler\ConfigCompiler}
+ * которых модуль не реализовал контракт, остаются пустыми. Компилятор {@see \modules\modman\compiler\ConfigCompiler}
  * читает этот объект, а не дёргает методы модуля.
  */
 final readonly class Contributions

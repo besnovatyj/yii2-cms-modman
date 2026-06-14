@@ -6,14 +6,10 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\compiler;
+namespace modules\modman\compiler;
 
 /**
  * Пути всех производных артефактов конфигурации.
- *
- * В переходный период (сосуществование со старым modman) пути несут суффикс `_new` — это
- * конфигурируемый параметр (см. config/params.php), а не временный хак. На cutover достаточно
- * переключить эти пути на канонические и перекомпилировать.
  */
 final readonly class ArtifactPaths
 {

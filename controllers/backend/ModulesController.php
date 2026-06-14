@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\controllers\backend;
+namespace modules\modman\controllers\backend;
 
-use modules\modmanNew\forms\backend\search\ModuleSearch;
-use modules\modmanNew\lifecycle\OperationReport;
-use modules\modmanNew\ModuleManager;
+use modules\modman\forms\backend\search\ModuleSearch;
+use modules\modman\lifecycle\OperationReport;
+use modules\modman\ModuleManager;
 use Throwable;
 use Yii;
 use yii\filters\VerbFilter;
@@ -19,7 +19,7 @@ use yii\web\Controller;
 use yii\web\Response;
 
 /**
- * Backend-интерфейс новой системы управления модулями.
+ * Backend-интерфейс системы управления модулями.
  *
  * Контроллёр тонкий: вся логика — в {@see ModuleManager} и хендлерах. Здесь только разбор запроса,
  * показ {@see OperationReport} через flash и рендер. Мутации — только POST (с CSRF из форм).

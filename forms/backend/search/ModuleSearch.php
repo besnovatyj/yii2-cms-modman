@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\forms\backend\search;
+namespace modules\modman\forms\backend\search;
 
 use Besnovatyj\Forms\BaseForm;
-use modules\modmanNew\catalog\source\DiscoveredPackage;
-use modules\modmanNew\ModuleView;
+use modules\modman\catalog\source\DiscoveredPackage;
+use modules\modman\ModuleView;
 use yii\data\ArrayDataProvider;
 
 /**
@@ -76,7 +76,7 @@ final class ModuleSearch extends BaseForm
                 'attributes' => ['id', 'status', 'availableVersion', 'installedVersion'],
                 'defaultOrder' => ['id' => SORT_ASC],
             ],
-            'pagination' => ['pageSize' => 25],
+            'pagination' => ['pageSize' => 50],
         ]);
     }
 

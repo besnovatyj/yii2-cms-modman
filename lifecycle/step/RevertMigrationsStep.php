@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle\step;
+namespace modules\modman\lifecycle\step;
 
-use modules\modmanNew\lifecycle\OperationContext;
-use modules\modmanNew\migration\MigrationOwnershipRepository;
-use modules\modmanNew\migration\ModuleMigrationRunner;
+use modules\modman\lifecycle\OperationContext;
+use modules\modman\migration\MigrationOwnershipRepository;
+use modules\modman\migration\ModuleMigrationRunner;
 
 /**
  * Откатывает ВСЕ миграции, принадлежащие модулю (для uninstall). Откат строго по владельцу

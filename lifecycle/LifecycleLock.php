@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle;
+namespace modules\modman\lifecycle;
 
-use modules\modmanNew\lifecycle\exception\LifecycleException;
+use modules\modman\lifecycle\exception\LifecycleException;
 use Throwable;
 use yii\mutex\Mutex;
 
@@ -22,7 +22,7 @@ final class LifecycleLock
 {
     public function __construct(
         private readonly Mutex  $mutex,
-        private readonly string $name = 'modman_new.lifecycle',
+        private readonly string $name = 'modman.lifecycle',
         private readonly int    $timeout = 15,
     ) {}
 

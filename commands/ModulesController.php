@@ -6,28 +6,28 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\commands;
+namespace modules\modman\commands;
 
-use modules\modmanNew\lifecycle\OperationReport;
-use modules\modmanNew\lifecycle\plan\LifecyclePlan;
-use modules\modmanNew\ModuleManager;
+use modules\modman\lifecycle\OperationReport;
+use modules\modman\lifecycle\plan\LifecyclePlan;
+use modules\modman\ModuleManager;
 use yii\console\Controller;
 use yii\console\ExitCode;
 use yii\helpers\Console;
 
 /**
- * Консольный драйвер новой системы управления модулями.
+ * Консольный драйвер системы управления модулями.
  *
  * Тонкая обёртка над тем же {@see ModuleManager}, что и web-контроллёр — демонстрация UI-агностичного
  * сервисного слоя (исправление связки «сервис ↔ session flash» старого modman). Пригодно для CI/Ansible.
  *
- *  - `php yii modmanNew/modules/list`
- *  - `php yii modmanNew/modules/check <moduleId>`
- *  - `php yii modmanNew/modules/install <moduleId>`
- *  - `php yii modmanNew/modules/uninstall <moduleId>`
- *  - `php yii modmanNew/modules/update <moduleId>`
- *  - `php yii modmanNew/modules/reconcile`
- *  - `php yii modmanNew/modules/recompile`
+ *  - `php yii modman/modules/list`
+ *  - `php yii modman/modules/check <moduleId>`
+ *  - `php yii modman/modules/install <moduleId>`
+ *  - `php yii modman/modules/uninstall <moduleId>`
+ *  - `php yii modman/modules/update <moduleId>`
+ *  - `php yii modman/modules/reconcile`
+ *  - `php yii modman/modules/recompile`
  */
 final class ModulesController extends Controller
 {

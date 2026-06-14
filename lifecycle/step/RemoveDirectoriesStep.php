@@ -6,10 +6,10 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle\step;
+namespace modules\modman\lifecycle\step;
 
 use Besnovatyj\Helpers\FilesystemHelper;
-use modules\modmanNew\lifecycle\OperationContext;
+use modules\modman\lifecycle\OperationContext;
 
 /**
  * Удаляет директории модуля на домене статики (для uninstall).

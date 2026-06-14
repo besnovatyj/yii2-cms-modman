@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\events;
+namespace modules\modman\events;
 
 use Throwable;
 use Yii;
@@ -36,7 +36,7 @@ final class ModuleLifecycleDispatcher
             } catch (Throwable $e) {
                 Yii::error(
                     "Слушатель фазы {$event->phase->value} (модуль {$event->moduleId}) упал: {$e->getMessage()}",
-                    'modmanNew/events',
+                    'modman/events',
                 );
             }
         }

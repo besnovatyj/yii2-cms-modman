@@ -6,19 +6,19 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle\handler;
+namespace modules\modman\lifecycle\handler;
 
 use Besnovatyj\Helpers\FilesystemHelper;
-use modules\modmanNew\catalog\PackageCatalog;
-use modules\modmanNew\compiler\ConfigCompiler;
-use modules\modmanNew\lifecycle\LifecycleLock;
-use modules\modmanNew\lifecycle\OperationReport;
-use modules\modmanNew\lifecycle\OperationType;
-use modules\modmanNew\migration\MigrationOwnershipRepository;
-use modules\modmanNew\migration\ModuleMigrationRunner;
-use modules\modmanNew\registry\ModuleRegistry;
-use modules\modmanNew\registry\ModuleState;
-use modules\modmanNew\registry\ModuleStatus;
+use modules\modman\catalog\PackageCatalog;
+use modules\modman\compiler\ConfigCompiler;
+use modules\modman\lifecycle\LifecycleLock;
+use modules\modman\lifecycle\OperationReport;
+use modules\modman\lifecycle\OperationType;
+use modules\modman\migration\MigrationOwnershipRepository;
+use modules\modman\migration\ModuleMigrationRunner;
+use modules\modman\registry\ModuleRegistry;
+use modules\modman\registry\ModuleState;
+use modules\modman\registry\ModuleStatus;
 use Throwable;
 
 /**

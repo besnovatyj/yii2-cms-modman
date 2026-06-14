@@ -7,28 +7,28 @@
 declare(strict_types=1);
 
 /**
- * Канал логирования новой системы управления модулями.
+ * Канал логирования системы управления модулями.
  *
- * Отдаётся через {@see \modules\modmanNew\Module::logChannels()} (контракт ProvidesLogChannels);
+ * Отдаётся через {@see \modules\modman\Module::logChannels()} (контракт ProvidesLogChannels);
  * при компиляции попадает в артефакт logChannels и подмешивается в `log.targets`.
  *
- * Ключ массива — id таргета Yii (он же имя Monolog-канала). Ловит категорию `modmanNew/*`. Сюда
+ * Ключ массива — id таргета Yii (он же имя Monolog-канала). Ловит категорию `modman/*`. Сюда
  * пишется служебная диагностика discovery (несконвертированные/невалидные модули, дубликаты) —
  * чтобы не «кричать» уведомлениями в браузере, а складывать в лог. Пример:
- *   `Yii::warning('Текст', 'modmanNew/discovery');`
+ *   `Yii::warning('Текст', 'modman/discovery');`
  *
- * Файл (конвенция вьювера): @runtime/logs/monolog-modmanNew.log
+ * Файл (конвенция вьювера): @runtime/logs/monolog-modman.log
  */
 
 return [
-    'modmanNew' => [
+    'modman' => [
         'class' => \common\components\log\MonologTarget::class,
-        'channel' => 'modmanNew',
-        'categories' => ['modmanNew/*'],
+        'channel' => 'modman',
+        'categories' => ['modman/*'],
         // level 'debug': менеджер логирует шаги lifecycle через Yii::info/debug; порог по умолчанию
         // 'notice' их бы отбросил. Канал должен показывать все шаги, а не только ошибки.
         'handlers' => [
-            ['type' => 'rotating_file', 'file' => '@runtime/logs/monolog-modmanNew.log', 'maxFiles' => 5, 'level' => 'debug'],
+            ['type' => 'rotating_file', 'file' => '@runtime/logs/monolog-modman.log', 'maxFiles' => 5, 'level' => 'debug'],
         ],
         'addTimestampToContext' => true,
         'extractExceptionTrace' => true,

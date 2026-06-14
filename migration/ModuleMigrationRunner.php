@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\migration;
+namespace modules\modman\migration;
 
 use RuntimeException;
 use Throwable;
@@ -18,7 +18,7 @@ use yii\db\Migration;
  * Программный запуск миграций модуля из веб/консоли с учётом владельца.
  *
  * В отличие от старого modman, путь и namespace миграций берутся из манифеста (контракт
- * {@see \modules\modmanNew\contract\ProvidesMigrations}), а не угадываются парсингом PHP. Применённые
+ * {@see \modules\modman\contract\ProvidesMigrations}), а не угадываются парсингом PHP. Применённые
  * версии фиксируются за модулем в {@see MigrationOwnershipRepository}, поэтому:
  *  - uninstall откатывает строго свои миграции;
  *  - update применяет только pending (новые) миграции, без down→up.
@@ -51,7 +51,7 @@ final class ModuleMigrationRunner
             $applied[] = $migration['version'];
             Yii::info(
                 "[{$moduleId}] применена миграция {$migration['version']}" . $this->formatOutput($output),
-                'modmanNew/migration',
+                'modman/migration',
             );
         }
 
@@ -86,7 +86,7 @@ final class ModuleMigrationRunner
         foreach ($versions as $version) {
             $migration = $byVersion[$version] ?? null;
             if ($migration === null) {
-                Yii::warning("[{$moduleId}] файл миграции для отката не найден: {$version}", 'modmanNew/migration');
+                Yii::warning("[{$moduleId}] файл миграции для отката не найден: {$version}", 'modman/migration');
                 $this->owners->forget($moduleId, $version);
                 continue;
             }
@@ -96,7 +96,7 @@ final class ModuleMigrationRunner
             $reverted[] = $version;
             Yii::info(
                 "[{$moduleId}] откачена миграция {$version}" . $this->formatOutput($output),
-                'modmanNew/migration',
+                'modman/migration',
             );
         }
 

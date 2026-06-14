@@ -7,7 +7,7 @@
 declare(strict_types=1);
 
 return [
-    'id' => 'modmanNew',
+    'id' => 'modman',
     'params' => [
         'iconClass' => 'bi bi-bricks',
     ],

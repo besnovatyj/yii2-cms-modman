@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\events;
+namespace modules\modman\events;
 
 /**
  * Фаза жизненного цикла, публикуемая в {@see ModuleLifecycleDispatcher}.

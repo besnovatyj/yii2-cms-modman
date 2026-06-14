@@ -7,41 +7,41 @@
 declare(strict_types=1);
 
 use Besnovatyj\Helpers\ArrayExportHelper;
-use modules\modmanNew\catalog\ManifestFactory;
-use modules\modmanNew\catalog\PackageCatalog;
-use modules\modmanNew\catalog\source\ComposerInstalledModuleSource;
-use modules\modmanNew\catalog\source\FilesystemModuleSource;
-use modules\modmanNew\compiler\ArtifactPaths;
-use modules\modmanNew\compiler\AtomicWriter;
-use modules\modmanNew\compiler\ConfigCompiler;
-use modules\modmanNew\compiler\MenuCompiler;
-use modules\modmanNew\deps\DependencyResolver;
-use modules\modmanNew\events\ModuleLifecycleDispatcher;
-use modules\modmanNew\lifecycle\handler\CheckHandler;
-use modules\modmanNew\lifecycle\handler\InstallHandler;
-use modules\modmanNew\lifecycle\handler\ReconcileHandler;
-use modules\modmanNew\lifecycle\handler\UninstallHandler;
-use modules\modmanNew\lifecycle\handler\UpdateHandler;
-use modules\modmanNew\lifecycle\LifecycleExecutor;
-use modules\modmanNew\lifecycle\LifecycleLock;
-use modules\modmanNew\lifecycle\LifecyclePlanner;
-use modules\modmanNew\lifecycle\step\CreateDirectoriesStep;
-use modules\modmanNew\lifecycle\step\RemoveDirectoriesStep;
-use modules\modmanNew\lifecycle\step\RevertMigrationsStep;
-use modules\modmanNew\lifecycle\step\RunMigrationsStep;
-use modules\modmanNew\migration\MigrationOwnershipRepository;
-use modules\modmanNew\migration\ModuleMigrationRunner;
-use modules\modmanNew\ModuleManager;
-use modules\modmanNew\registry\ModuleRegistry;
+use modules\modman\catalog\ManifestFactory;
+use modules\modman\catalog\PackageCatalog;
+use modules\modman\catalog\source\ComposerInstalledModuleSource;
+use modules\modman\catalog\source\FilesystemModuleSource;
+use modules\modman\compiler\ArtifactPaths;
+use modules\modman\compiler\AtomicWriter;
+use modules\modman\compiler\ConfigCompiler;
+use modules\modman\compiler\MenuCompiler;
+use modules\modman\deps\DependencyResolver;
+use modules\modman\events\ModuleLifecycleDispatcher;
+use modules\modman\lifecycle\handler\CheckHandler;
+use modules\modman\lifecycle\handler\InstallHandler;
+use modules\modman\lifecycle\handler\ReconcileHandler;
+use modules\modman\lifecycle\handler\UninstallHandler;
+use modules\modman\lifecycle\handler\UpdateHandler;
+use modules\modman\lifecycle\LifecycleExecutor;
+use modules\modman\lifecycle\LifecycleLock;
+use modules\modman\lifecycle\LifecyclePlanner;
+use modules\modman\lifecycle\step\CreateDirectoriesStep;
+use modules\modman\lifecycle\step\RemoveDirectoriesStep;
+use modules\modman\lifecycle\step\RevertMigrationsStep;
+use modules\modman\lifecycle\step\RunMigrationsStep;
+use modules\modman\migration\MigrationOwnershipRepository;
+use modules\modman\migration\ModuleMigrationRunner;
+use modules\modman\ModuleManager;
+use modules\modman\registry\ModuleRegistry;
 use yii\di\Container;
 use yii\mutex\FileMutex;
 
 /**
- * DI-проводка новой системы управления модулями.
+ * DI-проводка системы управления модулями.
  *
  * Все сервисы — синглтоны: каталог кэширует discovery, реестр держит состояние в памяти на запрос.
  * Скалярные/составные аргументы (пути, наборы источников) задаются явно; остальное собирается из
- * контейнера. Вызывается из {@see \modules\modmanNew\Bootstrap}.
+ * контейнера. Вызывается из {@see \modules\modman\Bootstrap}.
  */
 return function (Container $container): void {
     $params = require __DIR__ . '/params.php';

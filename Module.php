@@ -6,16 +6,16 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew;
+namespace modules\modman;
 
 use common\components\module\CmsModule;
-use modules\modmanNew\contract\DeclaresModule;
-use modules\modmanNew\contract\ProvidesAdminMenu;
-use modules\modmanNew\contract\ProvidesLogChannels;
+use modules\modman\contract\DeclaresModule;
+use modules\modman\contract\ProvidesAdminMenu;
+use modules\modman\contract\ProvidesLogChannels;
 use Yii;
 
 /**
- * Модуль новой системы управления модулями.
+ * Модуль системы управления модулями.
  *
  * Намеренно НЕ выбивается из общей кучи: это такой же модуль, как и управляемые им, и реализует тот
  * же контракт {@see DeclaresModule}. Отличие — {@see isEditable()} === false: системный модуль,
@@ -27,9 +27,9 @@ use Yii;
  * собственного реестра — иначе некому скомпилировать конфиги. Здесь — страховка на случай, если
  * Bootstrap не добавлен в app bootstrap, чтобы web-контроллёр всё равно работал.
  *
- * Backend-маршруты: `/modmanNew/backend/modules/...` (controllerNamespace по умолчанию
- * `modules\modmanNew\controllers`, путь `backend/modules` резолвится в controllers\backend\ModulesController).
- * Console-маршруты: `modmanNew/modules/...` (controllerNamespace переключается на commands).
+ * Backend-маршруты: `/modman/backend/modules/...` (controllerNamespace по умолчанию
+ * `modules\modman\controllers`, путь `backend/modules` резолвится в controllers\backend\ModulesController).
+ * Console-маршруты: `modman/modules/...` (controllerNamespace переключается на commands).
  */
 final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMenu, ProvidesLogChannels
 {
@@ -50,7 +50,7 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMen
 
     public static function moduleId(): string
     {
-        return 'modmanNew';
+        return 'modman';
     }
 
     public static function moduleVersion(): string

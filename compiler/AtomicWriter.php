@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\compiler;
+namespace modules\modman\compiler;
 
 use Besnovatyj\Helpers\ArrayExportHelper;
 use RuntimeException;

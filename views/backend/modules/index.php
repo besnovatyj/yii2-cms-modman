@@ -8,20 +8,20 @@ declare(strict_types=1);
 
 /**
  * @var yii\web\View $this
- * @var modules\modmanNew\forms\backend\search\ModuleSearch $search
+ * @var modules\modman\forms\backend\search\ModuleSearch $search
  * @var yii\data\ArrayDataProvider $dataProvider
- * @var modules\modmanNew\catalog\source\DiscoveredPackage[] $packages
- * @var array<string, modules\modmanNew\registry\ModuleState> $pending
+ * @var modules\modman\catalog\source\DiscoveredPackage[] $packages
+ * @var array<string, modules\modman\registry\ModuleState> $pending
  */
 
 use Besnovatyj\Backend\Widgets\pagination\LinkPager;
-use modules\modmanNew\forms\backend\search\ModuleSearch;
+use modules\modman\forms\backend\search\ModuleSearch;
 use yii\helpers\Html;
 
 $sort = $dataProvider->getSort();
 $modules = $dataProvider->getModels();
 
-$this->title = 'Управление модулями (новая система)';
+$this->title = 'Управление модулями';
 
 /** Бейдж статуса модуля. */
 $statusBadge = static function (string $status): string {
@@ -52,7 +52,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
 };
 ?>
 
-<div class="modman-new-index">
+<div class="modman-index">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h1 class="h3 mb-0"><i class="bi bi-bricks me-2"></i><?= Html::encode($this->title) ?></h1>
         <div class="d-flex gap-2">
@@ -65,8 +65,8 @@ $postButton = static function (string $action, string $moduleId, string $label, 
     </div>
 
     <p class="text-muted small">
-        Фантомная система управления модулями. Артефакты компилируются в файлы с суффиксом
-        <code>_new</code> и не влияют на работу приложения, которым управляет старый <code>modman</code>.
+        Состояние модулей декларативно и единично; вся конфигурация приложения — производная и
+        компилируется заново из реестра (compile-not-patch). Модуль на стадии тестирования.
     </p>
 
     <?php if ($pending !== []): ?>

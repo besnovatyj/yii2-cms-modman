@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle\plan;
+namespace modules\modman\lifecycle\plan;
 
 /**
  * Один шаг плана операции (для отображения dry-run/предпросмотра).

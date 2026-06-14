@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\migration;
+namespace modules\modman\migration;
 
 use yii\db\Connection;
 use yii\db\Query;
@@ -14,14 +14,14 @@ use yii\db\Query;
 /**
  * Учёт владения миграциями: какая миграция применена каким модулем.
  *
- * Это собственная история миграций новой системы (таблица `{{%modman_new_migration}}`), независимая
+ * Это собственная история миграций менеджера (таблица `{{%modman_migration}}`), независимая
  * от глобальной `{{%migration}}`. Решает корневую проблему старого modman, где при удалении
  * откатывались «все миграции, найденные в каталоге и присутствующие в общей истории» — что ломалось
  * при частичном применении, обновлениях и переносе файлов. Здесь откат идёт строго по владельцу.
  */
 final class MigrationOwnershipRepository
 {
-    private const string TABLE = '{{%modman_new_migration}}';
+    private const string TABLE = '{{%modman_migration}}';
 
     public function __construct(
         private readonly Connection $db,

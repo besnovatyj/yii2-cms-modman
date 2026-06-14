@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog;
+namespace modules\modman\catalog;
 
-use modules\modmanNew\catalog\exception\ManifestException;
-use modules\modmanNew\catalog\source\DiscoveredPackage;
-use modules\modmanNew\catalog\source\ModuleSource;
+use modules\modman\catalog\exception\ManifestException;
+use modules\modman\catalog\source\DiscoveredPackage;
+use modules\modman\catalog\source\ModuleSource;
 use Yii;
 
 /**
@@ -82,7 +82,7 @@ final class PackageCatalog
      *
      * Сюда попадают только реально требующие внимания вещи уровня discovery (директория сканирования
      * не найдена, installed.json нечитаем). Проблемы отдельных модулей идут не сюда, а в
-     * {@see invalids()} (строкой в UI) и в канал лога `modmanNew/*`.
+     * {@see invalids()} (строкой в UI) и в канал лога `modman/*`.
      *
      * @return string[]
      */
@@ -179,6 +179,6 @@ final class PackageCatalog
             declaredId: $declaredId ?? $package->moduleId,
             reason: $reason,
         );
-        Yii::warning("{$package->composerName}: {$reason}", 'modmanNew/discovery');
+        Yii::warning("{$package->composerName}: {$reason}", 'modman/discovery');
     }
 }

@@ -1,4 +1,4 @@
-# Архитектура `modmanNew`
+# Архитектура `modman`
 
 Переработанная система управления модулями CMS. Документ описывает идею, слои и потоки данных.
 Сопровождается пошаговым [plan.md](./plan.md).
@@ -69,7 +69,7 @@
 - `ProvidesMigrations` — `migrationPath(): string`, `migrationNamespace(): ?string`.
 - `ProvidesDirectories` — `directories(): array<RequiredDirectory>`.
 
-> **Размещение.** В этом репозитории контракты лежат внутри `modmanNew/contract/` для целостности и
+> **Размещение.** В этом репозитории контракты лежат внутри `modman/contract/` для целостности и
 > удобства diff. Архитектурно правильное место — `common\components\module\` (фреймворк-уровень), чтобы
 > модули не зависели от менеджера. Это «повышение» — отдельный шаг cutover.
 
@@ -139,15 +139,15 @@
 
 ## 11. Сосуществование со старым `modman`
 
-- modmanNew пишет артефакты с суффиксом `_new` (`ArtifactPaths`), реестр — `modules-state_new.php`.
+- modman пишет артефакты с суффиксом `_new` (`ArtifactPaths`), реестр — `modules-state_new.php`.
 - Тестовые `*-new` пакеты изолированы: свой namespace, свои таблицы (`*_new`), свои директории.
 - Приложение может **дополнительно** подключить `_new`-артефакты (additively) — управляемые
-  modmanNew модули реально работают, не задевая то, чем владеет старый modman.
+  modman модули реально работают, не задевая то, чем владеет старый modman.
 - Cutover: переключить `ArtifactPaths` на канонические пути, перекомпилировать, удалить старый modman.
 
 ## 12. Карта «старый → новый»
 
-| Старый modman | modmanNew |
+| Старый modman | modman |
 |---|---|
 | `ModulesManageService` (10 ответственностей) | `lifecycle/*` (план/исполнитель/шаги/хендлеры) |
 | `method_exists()` | `contract/Provides*` + `instanceof` |

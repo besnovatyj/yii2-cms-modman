@@ -1,6 +1,6 @@
 {
-  "name": "modules/modman-new",
-  "description": "Новая система управления модулями CMS (compile-not-patch). Переходная замена modules/modman.",
+  "name": "modules/modman",
+  "description": "Система управления модулями CMS (compile-not-patch).",
   "type": "yii2-extension",
   "license": "MIT",
   "require": {
@@ -14,12 +14,12 @@
     "bescms": {
       "kind": "module"
     },
-    "moduleClass": "modules\\modmanNew\\Module",
-    "moduleId": "modmanNew"
+    "moduleClass": "modules\\modman\\Module",
+    "moduleId": "modman"
   },
   "autoload": {
     "psr-4": {
-      "modules\\modmanNew\\": ""
+      "modules\\modman\\": ""
     }
   }
 }

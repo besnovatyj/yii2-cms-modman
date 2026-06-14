@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 /**
  * @var yii\web\View $this
- * @var modules\modmanNew\lifecycle\plan\LifecyclePlan $plan
+ * @var modules\modman\lifecycle\plan\LifecyclePlan $plan
  */
 
 use yii\helpers\Html;
@@ -16,7 +16,7 @@ use yii\helpers\Html;
 $this->title = "План операции «{$plan->type->value}» — {$plan->moduleId}";
 ?>
 
-<div class="modman-new-plan">
+<div class="modman-plan">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0"><?= Html::encode($this->title) ?></h1>
         <?= Html::a('← К списку', ['index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>

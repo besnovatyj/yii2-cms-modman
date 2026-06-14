@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\deps\exception;
+namespace modules\modman\deps\exception;
 
 /**
  * Обнаружена циклическая зависимость между модулями.

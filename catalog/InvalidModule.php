@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog;
+namespace modules\modman\catalog;
 
 /**
  * CMS-пакет, объявивший себя модулем (`extra.bescms.kind=module`), но непригодный к установке.
@@ -15,7 +15,7 @@ namespace modules\modmanNew\catalog;
  * наш модуль с проблемой конфигурации: не переведён на новый контракт, нет moduleClass, дубликат id
  * и т.п. Такие записи не выбрасываются молча и не «кричат» flash'ем на всю страницу — они
  * показываются строкой в списке рядом с причиной и погашенной кнопкой установки, а подробности
- * уходят в канал лога `modmanNew/*`.
+ * уходят в канал лога `modman/*`.
  */
 final readonly class InvalidModule
 {

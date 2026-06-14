@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle\exception;
+namespace modules\modman\lifecycle\exception;
 
 use RuntimeException;
 

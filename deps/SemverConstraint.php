@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\deps;
+namespace modules\modman\deps;
 
 use Composer\Semver\Semver;
 

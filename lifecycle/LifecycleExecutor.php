@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle;
+namespace modules\modman\lifecycle;
 
 use common\components\theme\Theme;
-use modules\modmanNew\compiler\ConfigCompiler;
-use modules\modmanNew\lifecycle\step\LifecycleStep;
+use modules\modman\compiler\ConfigCompiler;
+use modules\modman\lifecycle\step\LifecycleStep;
 use Throwable;
 use Yii;
 
@@ -41,7 +41,7 @@ final class LifecycleExecutor
     public function execute(OperationContext $context, array $steps, callable $commit, callable $rollback): void
     {
         $this->lock->withLock(function () use ($context, $steps, $commit, $rollback): void {
-            Yii::info("► Старт операции «{$context->type->value}» над модулем '{$context->moduleId}'.", 'modmanNew/lifecycle');
+            Yii::info("► Старт операции «{$context->type->value}» над модулем '{$context->moduleId}'.", 'modman/lifecycle');
             $executed = [];
             try {
                 foreach ($steps as $step) {
@@ -50,7 +50,7 @@ final class LifecycleExecutor
                     }
                     $description = $step->describe($context);
                     $context->report->step($description);
-                    Yii::info("[{$context->moduleId}] шаг: {$description}", 'modmanNew/lifecycle');
+                    Yii::info("[{$context->moduleId}] шаг: {$description}", 'modman/lifecycle');
                     $step->execute($context);
                     $executed[] = $step;
                 }
@@ -61,7 +61,7 @@ final class LifecycleExecutor
 
                 $this->logReport($context, "✔ Операция «{$context->type->value}» над '{$context->moduleId}' завершена.");
             } catch (Throwable $e) {
-                Yii::error("Операция {$context->type->value} над '{$context->moduleId}' прервана: {$e->getMessage()}", 'modmanNew/lifecycle');
+                Yii::error("Операция {$context->type->value} над '{$context->moduleId}' прервана: {$e->getMessage()}", 'modman/lifecycle');
                 $context->report->error($e->getMessage());
 
                 $this->compensate($executed, $context);
@@ -92,28 +92,28 @@ final class LifecycleExecutor
             new Theme()->renewPathMap();
         } catch (Throwable $e) {
             $context->report->warning('Не удалось обновить карту представлений темы: ' . $e->getMessage());
-            Yii::warning("[{$context->moduleId}] карта представлений темы не обновлена: {$e->getMessage()}", 'modmanNew/lifecycle');
+            Yii::warning("[{$context->moduleId}] карта представлений темы не обновлена: {$e->getMessage()}", 'modman/lifecycle');
         }
     }
 
     /**
-     * Выгружает накопленный {@see OperationReport} в канал лога `modmanNew/*` — чтобы детальный отчёт
+     * Выгружает накопленный {@see OperationReport} в канал лога `modman/*` — чтобы детальный отчёт
      * (созданные/удалённые директории, сводка миграций, предупреждения и ошибки) лёг в файл модуля,
      * а не остался только во flash. Уровень сообщения соответствует его роли.
      */
     private function logReport(OperationContext $context, string $header): void
     {
         $report = $context->report;
-        Yii::info($header, 'modmanNew/lifecycle');
+        Yii::info($header, 'modman/lifecycle');
 
         foreach ($report->infos() as $message) {
-            Yii::info("[{$context->moduleId}] {$message}", 'modmanNew/lifecycle');
+            Yii::info("[{$context->moduleId}] {$message}", 'modman/lifecycle');
         }
         foreach ($report->warnings() as $message) {
-            Yii::warning("[{$context->moduleId}] {$message}", 'modmanNew/lifecycle');
+            Yii::warning("[{$context->moduleId}] {$message}", 'modman/lifecycle');
         }
         foreach ($report->errors() as $message) {
-            Yii::error("[{$context->moduleId}] {$message}", 'modmanNew/lifecycle');
+            Yii::error("[{$context->moduleId}] {$message}", 'modman/lifecycle');
         }
     }
 

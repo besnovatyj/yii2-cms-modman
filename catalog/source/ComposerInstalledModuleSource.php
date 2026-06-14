@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog\source;
+namespace modules\modman\catalog\source;
 
 use Throwable;
 use Yii;
@@ -78,7 +78,7 @@ final class ComposerInstalledModuleSource implements ModuleSource
                     $result[] = $package;
                 }
             } catch (Throwable $e) {
-                Yii::error($e, 'modmanNew/' . __METHOD__);
+                Yii::error($e, 'modman/' . __METHOD__);
                 $this->warnings[] = "Пакет installed.json пропущен: " . ($pkg['name'] ?? '?') . " — {$e->getMessage()}";
             }
         }

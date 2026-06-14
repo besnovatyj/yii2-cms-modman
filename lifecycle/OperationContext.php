@@ -6,10 +6,10 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle;
+namespace modules\modman\lifecycle;
 
-use modules\modmanNew\catalog\ModuleManifest;
-use modules\modmanNew\registry\ModuleState;
+use modules\modman\catalog\ModuleManifest;
+use modules\modman\registry\ModuleState;
 
 /**
  * Контекст выполнения операции — носитель данных между шагами.

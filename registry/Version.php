@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\registry;
+namespace modules\modman\registry;
 
 use InvalidArgumentException;
 
@@ -15,7 +15,7 @@ use InvalidArgumentException;
  *
  * Сравнение делегируется PHP-функции version_compare (понимает 1.2.3, 1.2.3-RC1 и т.п.).
  * Проверка ограничений (^, ~, диапазоны) — отдельная ответственность
- * {@see \modules\modmanNew\deps\SemverConstraint}, чтобы не тащить сюда логику composer/semver.
+ * {@see \modules\modman\deps\SemverConstraint}, чтобы не тащить сюда логику composer/semver.
  */
 final readonly class Version
 {

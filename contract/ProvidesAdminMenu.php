@@ -6,14 +6,14 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\contract;
+namespace modules\modman\contract;
 
 /**
  * Модуль предоставляет пункты меню админки.
  *
  * Формат — совместим со старым modman: либо один пункт `['label' => ..., '_meta' => [...]]`,
  * либо массив таких пунктов. Раскладку по locations/группам/приоритетам выполняет
- * {@see \modules\modmanNew\compiler\MenuCompiler}.
+ * {@see \modules\modman\compiler\MenuCompiler}.
  */
 interface ProvidesAdminMenu
 {

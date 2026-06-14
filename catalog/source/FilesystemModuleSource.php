@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog\source;
+namespace modules\modman\catalog\source;
 
 use DirectoryIterator;
 use Throwable;
@@ -73,7 +73,7 @@ final class FilesystemModuleSource implements ModuleSource
                         $packages[] = $package;
                     }
                 } catch (Throwable $e) {
-                    Yii::error($e, 'modmanNew/' . __METHOD__);
+                    Yii::error($e, 'modman/' . __METHOD__);
                     $this->warnings[] = "Пакет пропущен из-за ошибки: {$entry->getPathname()} — {$e->getMessage()}";
                 }
             }

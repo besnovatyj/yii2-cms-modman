@@ -6,22 +6,22 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew;
+namespace modules\modman;
 
-use modules\modmanNew\catalog\PackageCatalog;
-use modules\modmanNew\catalog\source\DiscoveredPackage;
-use modules\modmanNew\compiler\CompiledArtifacts;
-use modules\modmanNew\compiler\ConfigCompiler;
-use modules\modmanNew\lifecycle\handler\CheckHandler;
-use modules\modmanNew\lifecycle\handler\InstallHandler;
-use modules\modmanNew\lifecycle\handler\ReconcileHandler;
-use modules\modmanNew\lifecycle\handler\UninstallHandler;
-use modules\modmanNew\lifecycle\handler\UpdateHandler;
-use modules\modmanNew\lifecycle\OperationReport;
-use modules\modmanNew\lifecycle\plan\LifecyclePlan;
-use modules\modmanNew\registry\ModuleRegistry;
-use modules\modmanNew\registry\ModuleState;
-use modules\modmanNew\registry\ModuleStatus;
+use modules\modman\catalog\PackageCatalog;
+use modules\modman\catalog\source\DiscoveredPackage;
+use modules\modman\compiler\CompiledArtifacts;
+use modules\modman\compiler\ConfigCompiler;
+use modules\modman\lifecycle\handler\CheckHandler;
+use modules\modman\lifecycle\handler\InstallHandler;
+use modules\modman\lifecycle\handler\ReconcileHandler;
+use modules\modman\lifecycle\handler\UninstallHandler;
+use modules\modman\lifecycle\handler\UpdateHandler;
+use modules\modman\lifecycle\OperationReport;
+use modules\modman\lifecycle\plan\LifecyclePlan;
+use modules\modman\registry\ModuleRegistry;
+use modules\modman\registry\ModuleState;
+use modules\modman\registry\ModuleStatus;
 
 /**
  * Фасад системы управления модулями — единый публичный API для драйверов (web-контроллёр, console).

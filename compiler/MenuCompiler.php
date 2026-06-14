@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\compiler;
+namespace modules\modman\compiler;
 
 /**
  * Чистая сборка меню админки из вкладов модулей.

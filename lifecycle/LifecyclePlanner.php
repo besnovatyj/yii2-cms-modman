@@ -6,16 +6,16 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle;
+namespace modules\modman\lifecycle;
 
-use modules\modmanNew\catalog\ModuleManifest;
-use modules\modmanNew\catalog\PackageCatalog;
-use modules\modmanNew\compiler\ArtifactPaths;
-use modules\modmanNew\deps\DependencyResolver;
-use modules\modmanNew\deps\exception\DependencyException;
-use modules\modmanNew\lifecycle\plan\LifecyclePlan;
-use modules\modmanNew\lifecycle\plan\PlannedStep;
-use modules\modmanNew\registry\ModuleRegistry;
+use modules\modman\catalog\ModuleManifest;
+use modules\modman\catalog\PackageCatalog;
+use modules\modman\compiler\ArtifactPaths;
+use modules\modman\deps\DependencyResolver;
+use modules\modman\deps\exception\DependencyException;
+use modules\modman\lifecycle\plan\LifecyclePlan;
+use modules\modman\lifecycle\plan\PlannedStep;
+use modules\modman\registry\ModuleRegistry;
 use Yii;
 
 /**

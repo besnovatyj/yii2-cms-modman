@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\registry;
+namespace modules\modman\registry;
 
 /**
  * Запись о модуле в реестре — единица единого источника истины.

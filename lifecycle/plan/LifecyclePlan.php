@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\lifecycle\plan;
+namespace modules\modman\lifecycle\plan;
 
-use modules\modmanNew\lifecycle\OperationType;
+use modules\modman\lifecycle\OperationType;
 
 /**
  * План операции — чистый, ничего не меняющий объект.

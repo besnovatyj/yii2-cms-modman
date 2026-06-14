@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\compiler;
+namespace modules\modman\compiler;
 
-use modules\modmanNew\catalog\ModuleManifest;
-use modules\modmanNew\catalog\PackageCatalog;
-use modules\modmanNew\registry\ModuleRegistry;
+use modules\modman\catalog\ModuleManifest;
+use modules\modman\catalog\PackageCatalog;
+use modules\modman\registry\ModuleRegistry;
 
 /**
  * Сердце архитектурного закона: производные конфиги собираются ЦЕЛИКОМ из (реестр × манифесты).

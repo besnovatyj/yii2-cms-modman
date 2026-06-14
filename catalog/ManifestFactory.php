@@ -6,20 +6,20 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog;
+namespace modules\modman\catalog;
 
-use modules\modmanNew\catalog\exception\ManifestException;
-use modules\modmanNew\catalog\source\DiscoveredPackage;
-use modules\modmanNew\contract\DeclaresModule;
-use modules\modmanNew\contract\ProvidesAdminMenu;
-use modules\modmanNew\contract\ProvidesBootstrap;
-use modules\modmanNew\contract\ProvidesComponents;
-use modules\modmanNew\contract\ProvidesDependencies;
-use modules\modmanNew\contract\ProvidesDirectories;
-use modules\modmanNew\contract\ProvidesLogChannels;
-use modules\modmanNew\contract\ProvidesMigrations;
-use modules\modmanNew\contract\ProvidesOptions;
-use modules\modmanNew\registry\Version;
+use modules\modman\catalog\exception\ManifestException;
+use modules\modman\catalog\source\DiscoveredPackage;
+use modules\modman\contract\DeclaresModule;
+use modules\modman\contract\ProvidesAdminMenu;
+use modules\modman\contract\ProvidesBootstrap;
+use modules\modman\contract\ProvidesComponents;
+use modules\modman\contract\ProvidesDependencies;
+use modules\modman\contract\ProvidesDirectories;
+use modules\modman\contract\ProvidesLogChannels;
+use modules\modman\contract\ProvidesMigrations;
+use modules\modman\contract\ProvidesOptions;
+use modules\modman\registry\Version;
 use Yii;
 
 /**
@@ -37,7 +37,7 @@ final class ManifestFactory
      * Вызывается каталогом только для пакетов, уже помеченных `extra.bescms.kind=module`. Поэтому
      * любое брошенное здесь исключение — это реальная ошибка конфигурации НАШЕГО модуля (а не «чужой
      * пакет»): не переведён на новый контракт, нет moduleClass, рассинхрон id. Каталог покажет такую
-     * проблему строкой рядом с модулем (а не flash'ем на всю страницу) — см. {@see \modules\modmanNew\catalog\InvalidModule}.
+     * проблему строкой рядом с модулем (а не flash'ем на всю страницу) — см. {@see \modules\modman\catalog\InvalidModule}.
      *
      * @throws ManifestException ошибка конфигурации CMS-модуля
      */

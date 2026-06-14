@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog\source;
+namespace modules\modman\catalog\source;
 
 /**
  * Вид пакета CMS — объявляется явно в `extra.bescms.kind` (а не выводится из наличия moduleClass).

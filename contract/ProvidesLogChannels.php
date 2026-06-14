@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\contract;
+namespace modules\modman\contract;
 
 /**
  * Модуль регистрирует каналы логирования.

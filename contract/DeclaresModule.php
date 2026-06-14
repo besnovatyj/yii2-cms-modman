@@ -6,10 +6,10 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\contract;
+namespace modules\modman\contract;
 
 /**
- * Ядро контракта модуля, управляемого новой системой.
+ * Ядро контракта модуля, управляемого системой.
  *
  * Методы намеренно СТАТИЧЕСКИЕ: discovery читает метаданные модуля, не инстанцируя Yii-модуль
  * (и, следовательно, не запуская его {@see \yii\base\Module::init()} с побочными эффектами).
@@ -20,7 +20,7 @@ namespace modules\modmanNew\contract;
  * {@see ProvidesComponents}, {@see ProvidesMigrations} и т.д. — каждый модуль реализует ровно то,
  * что он действительно предоставляет.
  *
- * @see \modules\modmanNew\catalog\ManifestFactory сборка {@see \modules\modmanNew\catalog\ModuleManifest}
+ * @see \modules\modman\catalog\ManifestFactory сборка {@see \modules\modman\catalog\ModuleManifest}
  */
 interface DeclaresModule
 {

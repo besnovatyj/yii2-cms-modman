@@ -7,14 +7,13 @@
 declare(strict_types=1);
 
 /**
- * Параметры новой системы управления модулями.
+ * Параметры системы управления модулями.
  *
- * Артефакты компилируются в файлы с суффиксом `_new` — это параметр СОСУЩЕСТВОВАНИЯ со старым modman,
- * а не временный хак. На cutover достаточно заменить пути на канонические и вызвать recompile.
+ * На cutover достаточно заменить пути на канонические и вызвать recompile.
  */
 return [
     // Единый источник истины — реестр состояния (атомарный lock-файл).
-    'lockFile' => '@config-dyn-gen/modules-state_new.php',
+    'lockFile' => '@config-dyn-gen/modules-state.php',
 
     // Директории discovery (источник Filesystem). Composer-источник читает vendor/composer/installed.json.
     'scanDirs' => [
@@ -24,20 +23,20 @@ return [
 
     // Производные артефакты конфигурации (компилируются целиком из реестра).
     'artifacts' => [
-        'modules' => '@config-dyn-gen/modulesConfigFile_new.php',
-        'bootstrap' => '@config-dyn-gen/bootstrapComponentsAndModulesConfigFile_new.php',
-        'components' => '@config-dyn-gen/componentsConfigFile_new.php',
-        'logChannels' => '@config-dyn-gen/logChannelsConfigFile_new.php',
-        'options' => '@config-dyn-gen/moduleOptions_new.php',
+        'modules' => '@config-dyn-gen/modulesConfigFile.php',
+        'bootstrap' => '@config-dyn-gen/bootstrapComponentsAndModulesConfigFile.php',
+        'components' => '@config-dyn-gen/componentsConfigFile.php',
+        'logChannels' => '@config-dyn-gen/logChannelsConfigFile.php',
+        'options' => '@config-dyn-gen/moduleOptions.php',
     ],
 
     // Локации меню (location => файл/включённость). Совпадает по смыслу с конфигом старого modman.
     'menuLocations' => [
-        'left-sidebar' => ['file' => '@config-dyn-gen/menu-left-sidebar_new.php', 'enabled' => true],
-        'right-sidebar' => ['file' => '@config-dyn-gen/menu-right-sidebar_new.php', 'enabled' => true],
-        'top-menu' => ['file' => '@config-dyn-gen/menu-top_new.php', 'enabled' => false],
-        'header-quick-links' => ['file' => '@config-dyn-gen/menu-header-quick_new.php', 'enabled' => false],
-        'footer-menu' => ['file' => '@config-dyn-gen/menu-footer_new.php', 'enabled' => false],
+        'left-sidebar' => ['file' => '@config-dyn-gen/menu-left-sidebar.php', 'enabled' => true],
+        'right-sidebar' => ['file' => '@config-dyn-gen/menu-right-sidebar.php', 'enabled' => true],
+        'top-menu' => ['file' => '@config-dyn-gen/menu-top.php', 'enabled' => false],
+        'header-quick-links' => ['file' => '@config-dyn-gen/menu-header-quick.php', 'enabled' => false],
+        'footer-menu' => ['file' => '@config-dyn-gen/menu-footer.php', 'enabled' => false],
     ],
 
     'menuDefaults' => [
@@ -46,5 +45,5 @@ return [
     ],
 
     // Путь для файлового мьютекса lifecycle-операций.
-    'mutexPath' => '@runtime/modman_new_mutex',
+    'mutexPath' => '@runtime/modman_mutex',
 ];

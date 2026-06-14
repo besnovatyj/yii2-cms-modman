@@ -6,13 +6,13 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\contract;
+namespace modules\modman\contract;
 
 /**
  * Модуль требует директории на домене статики для своей работы.
  *
- * Возвращается простой массив, который {@see \modules\modmanNew\catalog\ManifestFactory} обернёт
- * в набор {@see \modules\modmanNew\catalog\RequiredDirectory}. Допустимые формы элементов:
+ * Возвращается простой массив, который {@see \modules\modman\catalog\ManifestFactory} обернёт
+ * в набор {@see \modules\modman\catalog\RequiredDirectory}. Допустимые формы элементов:
  * - строка-путь (может содержать alias, например '@static/origin/Blog'); режим по умолчанию 0775;
  * - пара 'путь' => 0755 (явный режим).
  *

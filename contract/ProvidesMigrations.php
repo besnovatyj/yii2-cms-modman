@@ -6,14 +6,14 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\contract;
+namespace modules\modman\contract;
 
 /**
  * Модуль предоставляет миграции БД.
  *
  * В отличие от старого modman, путь и namespace объявляются явно (не угадываются парсингом PHP
  * построчно). Применённые миграции фиксируются за модулем
- * через {@see \modules\modmanNew\migration\MigrationOwnershipRepository}, что делает корректными
+ * через {@see \modules\modman\migration\MigrationOwnershipRepository}, что делает корректными
  * частичные применения, обновления и перенос файлов.
  */
 interface ProvidesMigrations

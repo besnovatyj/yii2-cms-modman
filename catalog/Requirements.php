@@ -6,13 +6,13 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\catalog;
+namespace modules\modman\catalog;
 
 /**
  * Типизированные требования модуля (зависимости).
  *
  * Заменяет «голый массив» старого modman. Собирается {@see ManifestFactory} из результата
- * {@see \modules\modmanNew\contract\ProvidesDependencies::dependencies()}.
+ * {@see \modules\modman\contract\ProvidesDependencies::dependencies()}.
  */
 final readonly class Requirements
 {

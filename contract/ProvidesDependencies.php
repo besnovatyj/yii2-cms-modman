@@ -6,14 +6,14 @@
 
 declare(strict_types=1);
 
-namespace modules\modmanNew\contract;
+namespace modules\modman\contract;
 
 /**
  * Модуль объявляет свои зависимости.
  *
  * Возвращается простой массив (не value-объект менеджера), чтобы модуль не зависел от внутренних
- * классов `modmanNew`. {@see \modules\modmanNew\catalog\ManifestFactory} обернёт его в
- * {@see \modules\modmanNew\catalog\Requirements}.
+ * классов `modman`. {@see \modules\modman\catalog\ManifestFactory} обернёт его в
+ * {@see \modules\modman\catalog\Requirements}.
  *
  * Формат:
  * ```php
