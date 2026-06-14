@@ -44,10 +44,22 @@ final class ConfigCompiler
         $options = [];
         $menuContributions = [];
         $warnings = [];
+        $compiled = [];
 
+        // Системные модули (editable=false) активны ВСЕГДА: они ставятся ядром/бутстрапом и в реестре
+        // их нет (как у самого менеджера). Без этого их конфиг и меню вымывались бы при каждой recompile
+        // — модуль «исчезал» бы из приложения после любой install/uninstall.
+        foreach ($this->catalog->manifests() as $id => $manifest) {
+            if (!$manifest->editable) {
+                $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $warnings);
+                $compiled[$id] = true;
+            }
+        }
+
+        // Модули, согласованно установленные через реестр.
         foreach ($this->registry->all() as $id => $state) {
-            if (!$state->status->isActive()) {
-                continue; // в конфиг попадают только согласованно установленные
+            if (!$state->status->isActive() || isset($compiled[$id])) {
+                continue;
             }
 
             $manifest = $this->catalog->findById($id);
@@ -56,24 +68,8 @@ final class ConfigCompiler
                 continue;
             }
 
-            $modules[$id] = $manifest->compiledModuleConfig();
-
-            foreach ($manifest->contributions->bootstrap as $class) {
-                if (!in_array($class, $bootstrap, true)) {
-                    $bootstrap[] = $class;
-                }
-            }
-
-            $this->mergeNamed($components, $manifest->contributions->components, $id, 'компонент', $warnings);
-            $this->mergeNamed($logChannels, $manifest->contributions->logChannels, $id, 'канал лога', $warnings);
-
-            if ($manifest->contributions->options !== []) {
-                $options[$id] = $manifest->contributions->options;
-            }
-
-            if ($manifest->contributions->hasAdminMenu()) {
-                $menuContributions[] = $manifest->contributions->adminMenu;
-            }
+            $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $warnings);
+            $compiled[$id] = true;
         }
 
         $menusByLocation = $this->menuCompiler->compile($this->menuCompiler->flatten($menuContributions));
@@ -132,6 +128,49 @@ final class ConfigCompiler
 
         foreach ($this->paths->menuLocationFiles as $location => $file) {
             $this->writer->writeArray($file, $artifacts->menusByLocation[$location] ?? []);
+        }
+    }
+
+    /**
+     * Накопить вклады одного манифеста в собираемые артефакты. Общий код для системных (всегда активных)
+     * и установленных через реестр модулей.
+     *
+     * @param array<string, array> $modules
+     * @param string[]             $bootstrap
+     * @param array<string, array> $components
+     * @param array<string, array> $logChannels
+     * @param array<string, array> $options
+     * @param array<int, array>    $menuContributions
+     * @param string[]             $warnings
+     */
+    private function addManifest(
+        ModuleManifest $manifest,
+        array &$modules,
+        array &$bootstrap,
+        array &$components,
+        array &$logChannels,
+        array &$options,
+        array &$menuContributions,
+        array &$warnings,
+    ): void {
+        $id = $manifest->id;
+        $modules[$id] = $manifest->compiledModuleConfig();
+
+        foreach ($manifest->contributions->bootstrap as $class) {
+            if (!in_array($class, $bootstrap, true)) {
+                $bootstrap[] = $class;
+            }
+        }
+
+        $this->mergeNamed($components, $manifest->contributions->components, $id, 'компонент', $warnings);
+        $this->mergeNamed($logChannels, $manifest->contributions->logChannels, $id, 'канал лога', $warnings);
+
+        if ($manifest->contributions->options !== []) {
+            $options[$id] = $manifest->contributions->options;
+        }
+
+        if ($manifest->contributions->hasAdminMenu()) {
+            $menuContributions[] = $manifest->contributions->adminMenu;
         }
     }
 
