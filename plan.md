@@ -49,18 +49,18 @@
 - [x] `ManifestFactory` — сборка манифеста из пакета (composer.json + контракты)
 - [x] `PackageCatalog` — агрегация источников, кэш на запрос, разрешение дубликатов
 
-## Фаза 3. Реестр состояния (`registry/`)
-- [ ] `ModuleStatus` (enum), `Version` (value object), `ModuleState` (readonly)
-- [ ] `ModuleRegistry` — атомарный lock-файл, status-машина, владение миграциями
+## Фаза 3. Реестр состояния (`registry/`) — ✅
+- [x] `ModuleStatus` (enum), `Version` (value object), `ModuleState` (readonly)
+- [x] `ModuleRegistry` — атомарный lock-файл, status-машина, владение миграциями
 
-## Фаза 4. Компилятор конфигурации (`compiler/`)
-- [ ] `ArtifactPaths`, `AtomicWriter` (tmp+rename+opcache), `CompiledArtifacts`
-- [ ] `ConfigCompiler` — чистая функция (registry × manifests) → артефакты
-- [ ] `MenuCompiler` — сборка меню по locations
+## Фаза 4. Компилятор конфигурации (`compiler/`) — ✅
+- [x] `ArtifactPaths`, `AtomicWriter` (tmp+rename+opcache), `CompiledArtifacts`
+- [x] `ConfigCompiler` — чистая функция (registry × manifests) → артефакты
+- [x] `MenuCompiler` — сборка меню по locations
 
-## Фаза 5. Зависимости (`deps/`)
-- [ ] `SemverConstraint` (через composer/semver, fallback на version_compare)
-- [ ] `DependencyGraph` + `DependencyResolver` — topo-сортировка, обратные зависимости
+## Фаза 5. Зависимости (`deps/`) — ✅
+- [x] `SemverConstraint` (через composer/semver, fallback на version_compare)
+- [x] `DependencyGraph` + `DependencyResolver` — topo-сортировка, обратные зависимости
 
 ## Фаза 6. Миграции с владельцем (`migration/`)
 - [ ] `MigrationOwnershipRepository` — учёт «миграция ↔ модуль»
