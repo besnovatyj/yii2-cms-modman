@@ -1,18 +1,23 @@
 # modman — система управления модулями
 
-Переработанная (compile-not-patch) система управления модулями CMS. Сосуществует со старым
-`app/modules/modman`, не влияя на его работу: компилирует собственные артефакты с суффиксом `_new`
-и держит собственный реестр состояния.
+Система управления модулями CMS на принципе **compile-not-patch**: состояние модулей декларативно и
+единично (реестр), а вся Yii-конфигурация — производная и компилируется заново. Модуль на стадии
+тестирования.
+
+Пришла на смену прежнему патч-based `modman`, который сохранён как образец в `app/modules/modman_b`
+(нерабочий, для сверки). Артефакты пишутся в **канонические** пути конфигурации приложения — без
+суффиксов и аддитивных слияний.
 
 - Идея и слои — [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Пошаговый трекер — [plan.md](./plan.md)
-- Сравнение со старым modman — таблица «старый → новый» в ARCHITECTURE.md §12
+- Пошаговый трекер и журнал решений — [plan.md](./plan.md)
+- Сравнение «патч-modman → modman» — таблица в ARCHITECTURE.md §12
 
 ## Карта каталога
 
 ```
 contract/     capability-интерфейсы модуля (DeclaresModule, Provides*) — вместо method_exists
-catalog/      ModuleManifest + value-объекты, discovery (Filesystem/Composer), ManifestFactory, PackageCatalog
+catalog/      ModuleManifest + value-объекты, discovery (Filesystem/Composer), ManifestFactory,
+              PackageCatalog, InvalidModule, маркер CmsMarker/CmsKind (extra.bescms)
 registry/     ModuleStatus, Version, ModuleState, ModuleRegistry (атомарный lock-файл — источник истины)
 compiler/     AtomicWriter, ConfigCompiler (чистая компиляция), MenuCompiler, ArtifactPaths
 deps/         SemverConstraint, DependencyGraph, DependencyResolver (прямые + обратные зависимости)
@@ -20,57 +25,42 @@ migration/    MigrationOwnershipRepository, ModuleMigrationRunner (учёт вл
 lifecycle/    Planner/Executor/Steps/Handlers (mutex, commit-at-end, компенсация, reconcile)
 events/       ModuleLifecycleDispatcher (app-level шина межмодульных интеграций)
 controllers/  backend/ModulesController (веб-интерфейс)
-commands/     ModulesController (консольный драйвер поверх того же фасада)
+commands/     ModulesController + MenuController (консольные драйверы поверх того же фасада)
 ModuleManager.php  фасад — единый публичный API для драйверов
 ```
 
 ## Подключение в приложение
 
-Маршрутизация общая, поэтому веб-интерфейс доступен сразу после регистрации модуля.
-
-**1. Зарегистрировать модуль** (в `app/var/config/modulesConfigFile.php` или ином месте, попадающем в
-`modules` приложения):
+**1. Глобальный bootstrap** — в `app/common/config/main.php` (app-level `bootstrap`), чтобы DI-проводка
+и шина событий поднимались рано, до загрузки скомпилированных артефактов:
 
 ```php
-'modman' => [
-    'class' => \modules\modman\Module::class,
-],
+'bootstrap' => ['log', 'queue', \modules\modman\Bootstrap::class],
 ```
 
-> Это нужно для **холодного старта**: пока нет скомпилированного `_new`-конфига, менеджеру неоткуда
-> взяться. Дальше менеджер (как системный модуль, `editable=false`) сам попадает в компилируемые
-> артефакты — его регистрация и пункт меню идут через `_new`-файлы (шаг 3), а не вымываются при
-> каждой `recompile`. Системные модули компилируются всегда, независимо от реестра.
+`Bootstrap` поднимает DI-контейнер менеджера и его канал лога `modman/*`. Это же решает chicken-and-egg:
+менеджер обязан работать, чтобы скомпилировать конфиги, поэтому его проводка — глобальная, а не из
+компилируемого артефакта.
 
-**2. Добавить Bootstrap** (в `bootstrapComponentsAndModulesConfigFile.php` или app `bootstrap`), чтобы
-DI и шина событий поднимались рано:
+**2. Компилируемые артефакты — это и есть конфиг приложения.** Менеджер пишет в канонические пути
+(`@config-dyn-gen/modulesConfigFile.php`, `componentsConfigFile.php`, `logChannelsConfigFile.php`,
+`menu-*.php`, …), которые приложение и так загружает. Никаких `_new` и аддитивного слияния — это
+основной конфиг.
+
+**3. Холодный старт.** Сам менеджер — системный модуль (`editable=false`) и компилируется в
+`modulesConfigFile.php` **всегда** (см. ARCHITECTURE §6), поэтому его регистрация и пункт меню переживают
+любую `recompile`. Но до самой первой компиляции (или если артефакт пуст) прописать его вручную, иначе
+до UI не добраться:
 
 ```php
-\modules\modman\Bootstrap::class,
+'modman' => ['class' => \modules\modman\Module::class],
 ```
-
-> Шаг 2 необязателен для работы веб-интерфейса (Module::init поднимает DI как страховку), но нужен,
-> чтобы другие модули могли подписаться на фазы lifecycle.
-
-**3. (Опционально) Подключить скомпилированные `_new`-артефакты**, чтобы управляемые модули реально
-работали в приложении. В `app/common/config/main.php`, рядом с подключением оригинальных артефактов:
-
-```php
-// Дополнительно к основным модулям — те, что установлены через modman.
-$modulesNew = @include Yii::getAlias('@config-dyn-gen/modulesConfigFile_new.php');
-if (is_array($modulesNew)) {
-    $modules = array_merge($modules, $modulesNew);
-}
-// Аналогично при необходимости: bootstrap_new, components_new, logChannels_new, menu-*_new.
-```
-
-Поскольку `_new`-модули изолированы (свой namespace, таблицы `*_new`, директории с суффиксом),
-это сложение аддитивно и не задевает то, чем владеет старый modman.
 
 ## Использование
 
-**Веб:** `/modman/backend/modules/index` — список модулей/пакетов, «План» (dry-run), установка,
-обновление, удаление, «Сверка» (reconcile), «Пересобрать конфиг».
+**Веб:** `/modman/backend/modules/index` — список модулей/пакетов (фильтры по статусу/обновлениям,
+сортировка, пагинация), «План» (dry-run), установка, обновление, удаление, «Сверка» (reconcile),
+«Пересобрать конфиг», «Пересобрать меню».
 
 **Консоль:**
 
@@ -105,17 +95,15 @@ php yii modman/menu/rebuild    # перекомпилировать только
 - `kind: "package"` — пакет CMS без жизненного цикла (например, виджет). Виден во вкладке «Пакеты»,
   но не устанавливается менеджером.
 
-Пакет без маркера менеджер игнорирует. Модуль, помеченный `kind: module`, но ещё не переведённый на
-новый контракт (или с ошибкой конфигурации), показывается строкой с причиной и погашенной кнопкой
-установки; подробности уходят в лог-канал `modman/*`, а не во flash на всю страницу.
+Пакет без маркера менеджер игнорирует. Модуль, помеченный `kind: module`, но с ошибкой конфигурации
+(нет `moduleClass`, не реализует контракт, дубликат id), показывается строкой с причиной и погашенной
+кнопкой установки; подробности уходят в лог-канал `modman/*`, а не во flash на всю страницу.
 
-## Контракт модуля (новый)
+## Контракт модуля
 
-Модуль реализует `DeclaresModule` и нужные `Provides*` (статические методы — discovery не инстанцирует
-класс). Пример минимального модуля:
-
-Модуль наследует тонкий рантайм-базовый класс `common\components\module\CmsModule` (даёт раскладку
-controllerNamespace и layout из темы) и реализует нужные контракты:
+Модуль наследует тонкий рантайм-базовый класс `common\components\module\CmsModule` (раскладка
+controllerNamespace по контексту приложения, layout из активной темы, хук DI `/config/container.php`) и
+реализует `DeclaresModule` плюс нужные `Provides*` (статические методы — discovery не инстанцирует класс):
 
 ```php
 use common\components\module\CmsModule;
@@ -124,10 +112,10 @@ use modules\modman\contract\ProvidesMigrations;
 
 final class Module extends CmsModule implements DeclaresModule, ProvidesMigrations
 {
-    public static function moduleId(): string { return 'ShortcodeNew'; }
+    public static function moduleId(): string { return 'Shortcode'; }
     public static function moduleVersion(): string { return '1.0.0'; }
     public static function isEditable(): bool { return true; }
-    public static function moduleConfig(): array { return ['id' => 'ShortcodeNew', 'params' => [...]]; }
+    public static function moduleConfig(): array { return ['id' => 'Shortcode', 'params' => [...]]; }
 
     public static function migrationPath(): string { return __DIR__ . '/migrations'; }
     public static function migrationNamespace(): ?string { return __NAMESPACE__ . '\\migrations'; }
@@ -139,18 +127,19 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 ```json
 "extra": {
     "bescms": { "kind": "module" },
-    "moduleClass": "Besnovatyj\\ShortcodeNew\\Module",
-    "moduleId": "ShortcodeNew"
+    "moduleClass": "Besnovatyj\\Shortcode\\Module",
+    "moduleId": "Shortcode"
 }
 ```
 
 > **Размещение контрактов.** Сейчас они в `modman/contract/` (для целостности репозитория и diff).
-> В продакшене (после cutover) их следует «повысить» в `common\components\module\`, чтобы модули не
-> зависели от менеджера.
+> Архитектурно правильнее «повысить» их в `common\components\module\`, чтобы модули не зависели от
+> менеджера — это оставшийся шаг (см. «Статус» ниже).
 
 > **Сам менеджер — обычный модуль.** `modman/Module` реализует тот же `DeclaresModule` с
 > `isEditable() === false`: он виден в общем списке как «системный» (с версией, без кнопок
-> установки/удаления), а не как исключение. Бутстрапится приложением вручную (шаги 1–2 выше).
+> установки/удаления), а не как исключение. Его проводка — глобальная (шаг 1), а в компиляцию он
+> попадает как любой системный модуль.
 
 ## Проверка синтаксиса (Docker)
 
@@ -158,9 +147,11 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 docker compose exec php sh -c 'find /home/node/app/modules/modman -name "*.php" -not -path "*/.git/*" -print0 | xargs -0 -n1 -P4 php -l'
 ```
 
-## Cutover (план перехода)
+## Статус
 
-1. Перевести существующие модули на новый контракт (capability-интерфейсы), убрать `*_new`-суффиксы.
-2. В `ArtifactPaths`/`params.php` заменить `_new`-пути на канонические.
-3. `php yii modman/modules/recompile`.
-4. Удалить старый `app/modules/modman`. Контракты перенести в `common`.
+Cutover на канонические пути выполнен; модуль на стадии тестирования. Прежний патч-modman сохранён как
+`app/modules/modman_b` (образец, вне автозагрузки). Остаётся:
+
+1. Обкатать `install`/`uninstall`/`update`/`reconcile` на реальных модулях (Фаза 11 в [plan.md](./plan.md)).
+2. «Повысить» контракты `contract/*` в `common\components\module\`.
+3. После доверия — удалить `modman_b`.
