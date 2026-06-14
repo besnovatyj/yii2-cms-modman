@@ -62,19 +62,19 @@
 - [x] `SemverConstraint` (через composer/semver, fallback на version_compare)
 - [x] `DependencyGraph` + `DependencyResolver` — topo-сортировка, обратные зависимости
 
-## Фаза 6. Миграции с владельцем (`migration/`)
-- [ ] `MigrationOwnershipRepository` — учёт «миграция ↔ модуль»
-- [ ] `ModuleMigrationRunner` — up/down только своих миграций, pending-only для update
+## Фаза 6. Миграции с владельцем (`migration/`) — ✅
+- [x] `MigrationOwnershipRepository` — учёт «миграция ↔ модуль»
+- [x] `ModuleMigrationRunner` — up/down только своих миграций, pending-only для update
 
-## Фаза 7. Lifecycle (`lifecycle/`)
-- [ ] `OperationContext`, `OperationReport`, `LifecyclePlan` + `PlannedStep`
-- [ ] `LifecycleStep` + конкретные шаги (миграции, директории, recompile, commit)
-- [ ] `LifecyclePlanner` (чистое планирование, dry-run)
-- [ ] `LifecycleExecutor` (mutex, commit-at-end, компенсация)
-- [ ] Хендлеры: `CheckHandler`, `InstallHandler`, `UninstallHandler`, `UpdateHandler`, `ReconcileHandler`
+## Фаза 7. Lifecycle (`lifecycle/`) — ✅
+- [x] `OperationContext`, `OperationReport`, `LifecyclePlan` + `PlannedStep`
+- [x] `LifecycleStep` + конкретные шаги (миграции, директории) + commit/recompile в исполнителе
+- [x] `LifecyclePlanner` (чистое планирование, dry-run, детекция конфликтов)
+- [x] `LifecycleExecutor` (mutex, commit-at-end, компенсация)
+- [x] Хендлеры: `CheckHandler`, `InstallHandler`, `UninstallHandler`, `UpdateHandler`, `ReconcileHandler`
 
-## Фаза 8. События (`events/`)
-- [ ] `LifecyclePhase` (enum), `ModuleLifecycleEvent`, `ModuleLifecycleDispatcher`
+## Фаза 8. События (`events/`) — ✅
+- [x] `LifecyclePhase` (enum), `ModuleLifecycleEvent`, `ModuleLifecycleDispatcher`
 
 ## Фаза 9. Веб-интерфейс и драйверы
 - [ ] `controllers/backend/ModulesController` (полноценный UI: список, check/plan, install, uninstall, update, reconcile)
