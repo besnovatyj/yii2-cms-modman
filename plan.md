@@ -141,3 +141,13 @@
   снимает `compact`, захватывает вывод миграций (`create table … done`) и пишет в `modmanNew/migration` —
   это «записи о созданных таблицах». Несоответствия discovery уже шли в `modmanNew/discovery`.
   Файл: `@runtime/logs/monolog-modmanNew.log`.
+- **Паритет с UI/проверками старого modman** (по внешнему ревью утраченного функционала):
+  - кнопка «Настройки» модуля (`hasOptions` → `/Config/backend/config/index?category=<id>`);
+  - обновление карты представлений темы после операций (`Theme::renewPathMap`) в `LifecycleExecutor`;
+  - диагностика и точечная пересборка меню — `commands/MenuController` (`menu/info`, `menu/rebuild`)
+    + `ConfigCompiler::recompileMenus`;
+  - права записи → **блокер** (а не warning) в `planInstall`/`planUpdate`;
+  - `planUpdate` уравнен с `planInstall` (зависимости, конфликты, запись; `detectConflicts(excludeId)`);
+  - список модулей: фильтр по статусу + «только с обновлениями», сортировка колонок и пагинация
+    через `ArrayDataProvider`/`LinkPager` (BS5);
+  - вкладка пакетов: добавлены лицензия и зависимости (`DiscoveredPackage::$license`, показ `require`).

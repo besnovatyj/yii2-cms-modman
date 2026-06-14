@@ -62,7 +62,7 @@ final class ModulesController extends Controller
 
         return $this->render('index', [
             'search' => $search,
-            'modules' => $search->filterModules($this->manager->modules()),
+            'dataProvider' => $search->moduleDataProvider($this->manager->modules()),
             'packages' => $search->filterPackages($this->manager->packages()),
             'pending' => $this->manager->pending(),
         ]);

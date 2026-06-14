@@ -9,13 +9,17 @@ declare(strict_types=1);
 /**
  * @var yii\web\View $this
  * @var modules\modmanNew\forms\backend\search\ModuleSearch $search
- * @var modules\modmanNew\ModuleView[] $modules
+ * @var yii\data\ArrayDataProvider $dataProvider
  * @var modules\modmanNew\catalog\source\DiscoveredPackage[] $packages
  * @var array<string, modules\modmanNew\registry\ModuleState> $pending
  */
 
+use Besnovatyj\Backend\Widgets\pagination\LinkPager;
+use modules\modmanNew\forms\backend\search\ModuleSearch;
 use yii\helpers\Html;
-use yii\helpers\Url;
+
+$sort = $dataProvider->getSort();
+$modules = $dataProvider->getModels();
 
 $this->title = 'Управление модулями (новая система)';
 
@@ -73,16 +77,36 @@ $postButton = static function (string $action, string $moduleId, string $label, 
     <?php endif; ?>
 
     <?= Html::beginForm(['index'], 'get', ['class' => 'mb-3']) ?>
-    <div class="input-group" style="max-width: 420px;">
-        <?= Html::activeTextInput($search, 'q', ['class' => 'form-control', 'placeholder' => 'Поиск по id / пакету…']) ?>
-        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-outline-primary']) ?>
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <div class="input-group" style="max-width: 320px;">
+                <?= Html::activeTextInput($search, 'q', ['class' => 'form-control', 'placeholder' => 'Поиск по id / пакету…']) ?>
+                <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-outline-primary']) ?>
+            </div>
+        </div>
+        <div class="col-auto">
+            <?= Html::dropDownList('status', $search->status, ModuleSearch::statusOptions(), [
+                'class' => 'form-select',
+                'onchange' => 'this.form.submit()',
+            ]) ?>
+        </div>
+        <div class="col-auto">
+            <div class="form-check">
+                <?= Html::checkbox('updatesOnly', $search->updatesOnly, [
+                    'class' => 'form-check-input',
+                    'id' => 'updatesOnly',
+                    'onchange' => 'this.form.submit()',
+                ]) ?>
+                <label class="form-check-label" for="updatesOnly">Только с обновлениями</label>
+            </div>
+        </div>
     </div>
     <?= Html::endForm() ?>
 
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-modules" type="button">
-                Модули <span class="badge text-bg-light"><?= count($modules) ?></span>
+                Модули <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?></span>
             </button>
         </li>
         <li class="nav-item">
@@ -98,10 +122,10 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                 <table class="table table-striped table-hover align-middle">
                     <thead>
                     <tr>
-                        <th>ID</th>
+                        <th><?= $sort->link('id', ['label' => 'ID']) ?></th>
                         <th>Пакет</th>
-                        <th>Статус</th>
-                        <th>Версия (доступна / установлена)</th>
+                        <th><?= $sort->link('status', ['label' => 'Статус']) ?></th>
+                        <th><?= $sort->link('availableVersion', ['label' => 'Версия']) ?> (доступна / установлена)</th>
                         <th class="text-end">Действия</th>
                     </tr>
                     </thead>
@@ -174,6 +198,10 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                     </tbody>
                 </table>
             </div>
+            <?= LinkPager::widget([
+                'pagination' => $dataProvider->getPagination(),
+                'options' => ['class' => 'pagination pagination-sm mb-0'],
+            ]) ?>
         </div>
 
         <div class="tab-pane fade" id="tab-packages">
