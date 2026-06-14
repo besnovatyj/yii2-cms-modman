@@ -57,8 +57,10 @@ final class LifecyclePlanner
             $blockers[] = $conflict;
         }
 
-        foreach ($this->checkWritable($manifest) as $warning) {
-            $warnings[] = $warning;
+        // Недоступность записи гарантирует провал recompile/создания директорий — это блокер, а не
+        // предупреждение, иначе dry-run соврёт «выполнимо».
+        foreach ($this->checkWritable($manifest) as $blocker) {
+            $blockers[] = $blocker;
         }
 
         return new LifecyclePlan(
@@ -120,6 +122,21 @@ final class LifecyclePlanner
             $blockers[] = "Нет изменений: установлена версия {$state->version->value}, манифест не менялся.";
         }
 
+        // Паритет с planInstall: новая версия могла добавить зависимости, конфликты компонентов/bootstrap
+        // или потребовать запись туда, куда нельзя. detectConflicts исключает сам обновляемый модуль,
+        // иначе его же вклады (он установлен) дали бы ложный самоконфликт.
+        try {
+            $this->deps->assertCanInstall($manifest);
+        } catch (DependencyException $e) {
+            $blockers[] = $e->getMessage();
+        }
+        foreach ($this->detectConflicts($manifest, $manifest->id) as $conflict) {
+            $blockers[] = $conflict;
+        }
+        foreach ($this->checkWritable($manifest) as $blocker) {
+            $blockers[] = $blocker;
+        }
+
         $steps = [
             new PlannedStep('Применить новые (pending) миграции'),
             new PlannedStep('Создать недостающие директории'),
@@ -153,11 +170,11 @@ final class LifecyclePlanner
      *
      * @return string[]
      */
-    private function detectConflicts(ModuleManifest $manifest): array
+    private function detectConflicts(ModuleManifest $manifest, ?string $excludeId = null): array
     {
         $conflicts = [];
 
-        [$components, $bootstrap] = $this->managedContributions();
+        [$components, $bootstrap] = $this->managedContributions($excludeId);
 
         foreach (array_keys($manifest->contributions->components) as $name) {
             if (isset($components[$name])) {
@@ -179,14 +196,15 @@ final class LifecyclePlanner
     /**
      * Имена компонентов/bootstrap, уже занятые управляемыми (installed) модулями.
      *
+     * @param string|null $excludeId не учитывать этот модуль (например, сам себя при update).
      * @return array{0: array<string,string>, 1: array<string,string>}
      */
-    private function managedContributions(): array
+    private function managedContributions(?string $excludeId = null): array
     {
         $components = [];
         $bootstrap = [];
         foreach ($this->registry->all() as $id => $state) {
-            if (!$state->status->isActive()) {
+            if ($id === $excludeId || !$state->status->isActive()) {
                 continue;
             }
             $manifest = $this->catalog->findById($id);
