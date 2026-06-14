@@ -28,6 +28,7 @@ final readonly class ModuleView
         public bool    $installed,
         public bool    $hasUpdate,
         public string  $iconClass = '',
+        public bool    $hasOptions = false,
         public bool    $system = false,
         public bool    $orphan = false,
         public bool    $invalid = false,

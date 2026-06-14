@@ -26,6 +26,7 @@ final readonly class DiscoveredPackage
         public string     $path,
         public string     $type,
         public string     $composerVersion,
+        public string     $license,
         public ?string    $moduleClass,
         public ?string    $moduleId,
         public ?CmsMarker $cmsMarker,
@@ -49,12 +50,19 @@ final readonly class DiscoveredPackage
 
         $psr4 = $data['autoload']['psr-4'] ?? [];
 
+        // Лицензия в composer.json может быть строкой или массивом (как у старого modman PackageInfo).
+        $license = '';
+        if (isset($data['license'])) {
+            $license = is_array($data['license']) ? implode(', ', $data['license']) : (string)$data['license'];
+        }
+
         return new self(
             composerName: $data['name'],
             description: (string)($data['description'] ?? ''),
             path: $path,
             type: (string)($data['type'] ?? ''),
             composerVersion: (string)($data['version'] ?? ''),
+            license: $license,
             moduleClass: $moduleClass,
             moduleId: $moduleId,
             cmsMarker: is_array($extra) ? CmsMarker::fromExtra($extra) : null,

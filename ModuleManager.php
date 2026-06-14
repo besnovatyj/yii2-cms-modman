@@ -111,6 +111,7 @@ final class ModuleManager
                 installed: $installed,
                 hasUpdate: $hasUpdate,
                 iconClass: $manifest->iconClass,
+                hasOptions: $manifest->contributions->options !== [],
                 system: $system,
             );
         }

@@ -148,6 +148,10 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                             <?= Html::a('План', ['check', 'moduleId' => $m->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
                                         <?php endif; ?>
 
+                                        <?php if ($m->installed && $m->hasOptions): ?>
+                                            <?= Html::a('Настройки', ['/Config/backend/config/index', 'category' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                                        <?php endif; ?>
+
                                         <?php if (!$m->installed && !$m->orphan && !$m->system): ?>
                                             <?= $postButton('install', $m->id, 'Установить', 'btn-success') ?>
                                         <?php endif; ?>
@@ -182,6 +186,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                         <th>Тип</th>
                         <th>moduleId</th>
                         <th>Версия</th>
+                        <th>Лицензия</th>
                         <th>Источник</th>
                     </tr>
                     </thead>
@@ -193,6 +198,16 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                 <?php if ($p->description !== ''): ?>
                                     <div class="text-muted small"><?= Html::encode($p->description) ?></div>
                                 <?php endif; ?>
+                                <?php if ($p->require !== []): ?>
+                                    <details class="small mt-1">
+                                        <summary class="text-muted">Зависимости (<?= count($p->require) ?>)</summary>
+                                        <ul class="mb-0 ps-3">
+                                            <?php foreach ($p->require as $dep => $constraint): ?>
+                                                <li><code><?= Html::encode((string)$dep) ?></code>: <?= Html::encode((string)$constraint) ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </details>
+                                <?php endif; ?>
                             </td>
                             <td><?= $p->isModule()
                                     ? '<span class="badge text-bg-primary">модуль</span>'
@@ -200,11 +215,12 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                             <td class="small"><?= Html::encode($p->type) ?></td>
                             <td><?= $p->isModule() ? '<code>' . Html::encode((string)$p->moduleId) . '</code>' : '<span class="text-muted">—</span>' ?></td>
                             <td class="small"><?= Html::encode($p->composerVersion ?: '—') ?></td>
+                            <td class="small"><?= Html::encode($p->license ?: '—') ?></td>
                             <td><span class="badge text-bg-light"><?= Html::encode($p->sourceLabel) ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if ($packages === []): ?>
-                        <tr><td colspan="6" class="text-center text-muted py-4">Пакеты не найдены.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-4">Пакеты не найдены.</td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>
