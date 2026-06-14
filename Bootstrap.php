@@ -8,7 +8,9 @@ declare(strict_types=1);
 
 namespace modules\modmanNew;
 
+use Throwable;
 use Yii;
+use yii\base\Application;
 use yii\base\BootstrapInterface;
 
 /**
@@ -23,5 +25,34 @@ final class Bootstrap implements BootstrapInterface
     public function bootstrap($app): void
     {
         (require __DIR__ . '/config/container.php')(Yii::$container);
+        $this->registerLogChannels($app);
+    }
+
+    /**
+     * Поднимает собственный канал лога менеджера в рантайме.
+     *
+     * Зачем здесь, а не только через скомпилированный артефакт logChannels: менеджер работает уже в
+     * «фантомной» фазе (сам ещё не установлен, `_new`-артефакты могут быть не подключены). Без этого
+     * всё, что пишется в `modmanNew/*` (отчёты установки/удаления, миграции, несоответствия discovery),
+     * провалилось бы в общий `monolog.log` вместо своего файла. Каналы берём из {@see Module::logChannels()}
+     * — единый источник, тот же, что компилируется при установке. Уже зарегистрированный таргет не трогаем.
+     */
+    private function registerLogChannels(Application $app): void
+    {
+        if (!$app->has('log')) {
+            return;
+        }
+
+        $dispatcher = $app->get('log');
+        foreach (Module::logChannels() as $id => $spec) {
+            if (isset($dispatcher->targets[$id])) {
+                continue;
+            }
+            try {
+                $dispatcher->targets[$id] = Yii::createObject($spec);
+            } catch (Throwable $e) {
+                Yii::warning("Не удалось поднять канал лога '{$id}': {$e->getMessage()}", 'modmanNew/lifecycle');
+            }
+        }
     }
 }

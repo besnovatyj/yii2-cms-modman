@@ -133,3 +133,11 @@
 - **Иконка модуля в списке** — на стороне менеджера: фабрика читает `config.params.iconClass` в
   `ModuleManifest::$iconClass` → `ModuleView` → вьюха. Метод на модуле (как `BaseModule::getIcon`) не
   нужен — иконка нужна менеджеру для списка, а не самому модулю.
+- **Подробный лог установки/удаления — в свой канал `modmanNew/*`** (аналог старого `InstallationLog`).
+  Три слоя были дырявы и закрыты: (1) канал поднимается в рантайме из `Bootstrap` (в фантомной фазе
+  `_new`-артефакт logChannels не подключён, иначе всё валилось в общий `monolog.log`); (2)
+  `LifecycleExecutor` выгружает весь `OperationReport` (старт, каждый шаг, созданные/удалённые
+  директории, предупреждения, ошибки, итог) в канал, а не только во flash; (3) `ModuleMigrationRunner`
+  снимает `compact`, захватывает вывод миграций (`create table … done`) и пишет в `modmanNew/migration` —
+  это «записи о созданных таблицах». Несоответствия discovery уже шли в `modmanNew/discovery`.
+  Файл: `@runtime/logs/monolog-modmanNew.log`.

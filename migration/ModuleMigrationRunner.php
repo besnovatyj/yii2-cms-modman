@@ -46,10 +46,13 @@ final class ModuleMigrationRunner
                 continue;
             }
 
-            $this->run($migration, 'up');
+            $output = $this->run($migration, 'up');
             $this->owners->record($moduleId, $migration['version'], $namespace, $migration['file']);
             $applied[] = $migration['version'];
-            Yii::info("[{$moduleId}] применена миграция {$migration['version']}", 'modmanNew/migration');
+            Yii::info(
+                "[{$moduleId}] применена миграция {$migration['version']}" . $this->formatOutput($output),
+                'modmanNew/migration',
+            );
         }
 
         return $applied;
@@ -88,10 +91,13 @@ final class ModuleMigrationRunner
                 continue;
             }
 
-            $this->run($migration, 'down');
+            $output = $this->run($migration, 'down');
             $this->owners->forget($moduleId, $version);
             $reverted[] = $version;
-            Yii::info("[{$moduleId}] откачена миграция {$version}", 'modmanNew/migration');
+            Yii::info(
+                "[{$moduleId}] откачена миграция {$version}" . $this->formatOutput($output),
+                'modmanNew/migration',
+            );
         }
 
         return $reverted;
@@ -124,10 +130,13 @@ final class ModuleMigrationRunner
     }
 
     /**
+     * Выполняет миграцию и ВОЗВРАЩАЕТ её вывод (создание/удаление таблиц и т.п.) для лога.
+     *
      * @param array{file:string, version:string} $migration
      * @param 'up'|'down' $direction
+     * @return string захваченный вывод миграции (DDL-шаги Yii\db\Migration)
      */
-    private function run(array $migration, string $direction): void
+    private function run(array $migration, string $direction): string
     {
         $instance = $this->instantiate($migration['file']);
 
@@ -135,18 +144,29 @@ final class ModuleMigrationRunner
         try {
             $result = $instance->{$direction}();
         } catch (Throwable $e) {
-            ob_end_clean();
+            $output = (string)ob_get_clean();
             throw new RuntimeException(
-                "Ошибка миграции ({$direction}) {$migration['version']}: {$e->getMessage()}",
+                "Ошибка миграции ({$direction}) {$migration['version']}: {$e->getMessage()}" . $this->formatOutput($output),
                 0,
                 $e,
             );
         }
-        ob_end_clean();
+        $output = (string)ob_get_clean();
 
         if ($result === false) {
-            throw new RuntimeException("Миграция {$migration['version']} ({$direction}) вернула false.");
+            throw new RuntimeException("Миграция {$migration['version']} ({$direction}) вернула false." . $this->formatOutput($output));
         }
+
+        return $output;
+    }
+
+    /**
+     * Приводит захваченный вывод миграции к компактному виду для дописывания в одну лог-запись.
+     */
+    private function formatOutput(string $output): string
+    {
+        $output = trim($output);
+        return $output === '' ? '' : ":\n" . $output;
     }
 
     private function instantiate(string $file): Migration
@@ -158,8 +178,10 @@ final class ModuleMigrationRunner
         $candidates = $this->declaredCandidates($className);
         foreach ($candidates as $candidate) {
             if (class_exists($candidate, false)) {
+                // compact=false: миграция печатает свои DDL-шаги ("create table ... done"), которые
+                // run() захватывает и пишет в канал лога — это и есть «записи о созданных таблицах».
                 /** @var Migration $instance */
-                $instance = new $candidate(['db' => $this->db, 'compact' => true]);
+                $instance = new $candidate(['db' => $this->db, 'compact' => false]);
                 return $instance;
             }
         }
