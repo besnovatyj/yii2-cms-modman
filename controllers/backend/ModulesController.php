@@ -46,6 +46,7 @@ final class ModulesController extends Controller
                     'update' => ['POST'],
                     'reconcile' => ['POST'],
                     'recompile' => ['POST'],
+                    'rebuild-menus' => ['POST'],
                 ],
             ],
         ]);
@@ -110,6 +111,21 @@ final class ModulesController extends Controller
         } catch (Throwable $e) {
             Yii::$app->errorHandler->logException($e);
             Yii::$app->session->addFlash('error', 'Ошибка перекомпиляции: ' . $e->getMessage());
+        }
+        return $this->redirect(['index']);
+    }
+
+    public function actionRebuildMenus(): Response
+    {
+        try {
+            $artifacts = $this->manager->recompileMenus();
+            Yii::$app->session->addFlash('success', 'Меню перекомпилировано из реестра.');
+            foreach ($artifacts->warnings as $warning) {
+                Yii::$app->session->addFlash('warning', $warning);
+            }
+        } catch (Throwable $e) {
+            Yii::$app->errorHandler->logException($e);
+            Yii::$app->session->addFlash('error', 'Ошибка пересборки меню: ' . $e->getMessage());
         }
         return $this->redirect(['index']);
     }

@@ -82,6 +82,14 @@ final class ModuleManager
     }
 
     /**
+     * Перекомпилировать ТОЛЬКО артефакты меню (точечно, для разработки/обслуживания меню).
+     */
+    public function recompileMenus(): CompiledArtifacts
+    {
+        return $this->compiler->recompileMenus();
+    }
+
+    /**
      * Модули для UI: манифесты каталога, наложенные на реестр, плюс «осиротевшие» записи реестра.
      *
      * @return ModuleView[]

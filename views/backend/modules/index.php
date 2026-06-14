@@ -57,6 +57,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
         <h1 class="h3 mb-0"><i class="bi bi-bricks me-2"></i><?= Html::encode($this->title) ?></h1>
         <div class="d-flex gap-2">
             <?= $postButton('recompile', '', 'Пересобрать конфиг', 'btn-outline-secondary') ?>
+            <?= $postButton('rebuild-menus', '', 'Пересобрать меню', 'btn-outline-secondary') ?>
             <?php if ($pending !== []): ?>
                 <?= $postButton('reconcile', '', 'Сверка (' . count($pending) . ')', 'btn-warning', 'Откатить незавершённые операции к чистому состоянию?') ?>
             <?php endif; ?>
