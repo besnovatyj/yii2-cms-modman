@@ -94,6 +94,10 @@ final class ModuleManager
         foreach ($manifests as $id => $manifest) {
             $state = $this->registry->get($id);
             $installed = $state?->status->isActive() ?? false;
+            // Системный модуль (editable=false): часть ядра, ставится установочным скриптом, из админки
+            // неприкасаем. Сам менеджер — такой же: бутстрапится приложением вручную, поэтому показываем
+            // его «активным/системным», а не «доступен к установке», и без кнопок install/uninstall.
+            $system = !$manifest->editable;
             $hasUpdate = $installed
                 && ($manifest->version->isGreaterThan($state->version) || $manifest->checksum !== $state->manifestChecksum);
 
@@ -102,10 +106,27 @@ final class ModuleManager
                 package: $manifest->package,
                 availableVersion: $manifest->version->value,
                 installedVersion: $state?->version->value,
-                status: $state?->status->value ?? ModuleStatus::Discovered->value,
+                status: $state?->status->value ?? ($system ? 'system' : ModuleStatus::Discovered->value),
                 editable: $manifest->editable,
                 installed: $installed,
                 hasUpdate: $hasUpdate,
+                system: $system,
+            );
+        }
+
+        // CMS-модули с ошибкой конфигурации — строкой с причиной и без активной кнопки установки.
+        foreach ($this->catalog->invalids() as $invalid) {
+            $views[] = new ModuleView(
+                id: $invalid->declaredId ?? $invalid->package,
+                package: $invalid->package,
+                availableVersion: '',
+                installedVersion: null,
+                status: 'invalid',
+                editable: false,
+                installed: false,
+                hasUpdate: false,
+                invalid: true,
+                invalidReason: $invalid->reason,
             );
         }
 

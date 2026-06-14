@@ -11,6 +11,9 @@
     "composer/semver": "Полноценная проверка ограничений версий (^, ~, диапазоны) в зависимостях модулей"
   },
   "extra": {
+    "bescms": {
+      "kind": "module"
+    },
     "moduleClass": "modules\\modmanNew\\Module",
     "moduleId": "modmanNew"
   },

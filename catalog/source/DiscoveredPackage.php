@@ -21,16 +21,17 @@ final readonly class DiscoveredPackage
      * @param array<string,string> $autoloadPsr4  PSR-4 префикс => относительный путь
      */
     public function __construct(
-        public string  $composerName,
-        public string  $description,
-        public string  $path,
-        public string  $type,
-        public string  $composerVersion,
-        public ?string $moduleClass,
-        public ?string $moduleId,
-        public array   $require,
-        public array   $autoloadPsr4,
-        public string  $sourceLabel,
+        public string     $composerName,
+        public string     $description,
+        public string     $path,
+        public string     $type,
+        public string     $composerVersion,
+        public ?string    $moduleClass,
+        public ?string    $moduleId,
+        public ?CmsMarker $cmsMarker,
+        public array      $require,
+        public array      $autoloadPsr4,
+        public string     $sourceLabel,
     ) {}
 
     /**
@@ -56,6 +57,7 @@ final readonly class DiscoveredPackage
             composerVersion: (string)($data['version'] ?? ''),
             moduleClass: $moduleClass,
             moduleId: $moduleId,
+            cmsMarker: is_array($extra) ? CmsMarker::fromExtra($extra) : null,
             require: is_array($data['require'] ?? null) ? $data['require'] : [],
             autoloadPsr4: is_array($psr4) ? $psr4 : [],
             sourceLabel: $sourceLabel,
@@ -63,10 +65,27 @@ final readonly class DiscoveredPackage
     }
 
     /**
-     * Похоже ли на управляемый модуль (объявлены moduleClass и moduleId).
+     * Принадлежит ли пакет данной CMS (есть маркер `extra.bescms`). Только такие пакеты менеджер
+     * вообще показывает — чужие composer-зависимости из `vendor/` сюда не попадают.
+     */
+    public function isCmsPackage(): bool
+    {
+        return $this->cmsMarker !== null;
+    }
+
+    public function cmsKind(): ?CmsKind
+    {
+        return $this->cmsMarker?->kind;
+    }
+
+    /**
+     * Объявлен ли пакет управляемым модулем (`extra.bescms.kind=module`).
+     *
+     * Это намерение, а не гарантия валидности: наличие/корректность moduleClass и контракта
+     * проверяет {@see \modules\modmanNew\catalog\ManifestFactory}.
      */
     public function isModule(): bool
     {
-        return $this->moduleClass !== null && $this->moduleId !== null;
+        return $this->cmsMarker?->kind === CmsKind::Module;
     }
 }

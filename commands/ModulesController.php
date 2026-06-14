@@ -55,6 +55,9 @@ final class ModulesController extends Controller
                 $m->availableVersion ?: '—',
                 $m->installedVersion ?? '—',
             ));
+            if ($m->invalid && $m->invalidReason !== null) {
+                $this->stdout("  ↳ {$m->invalidReason}\n", Console::FG_YELLOW);
+            }
         }
         return ExitCode::OK;
     }

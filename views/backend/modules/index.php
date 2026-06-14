@@ -23,7 +23,9 @@ $this->title = 'Управление модулями (новая система
 $statusBadge = static function (string $status): string {
     $map = [
         'installed' => 'text-bg-success',
+        'system' => 'text-bg-primary',
         'discovered' => 'text-bg-secondary',
+        'invalid' => 'text-bg-danger',
         'failed' => 'text-bg-danger',
         'installing' => 'text-bg-warning',
         'updating' => 'text-bg-warning',
@@ -105,11 +107,19 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                     </thead>
                     <tbody>
                     <?php foreach ($modules as $m): ?>
-                        <tr>
-                            <td><code><?= Html::encode($m->id) ?></code></td>
+                        <tr class="<?= $m->invalid ? 'table-warning' : '' ?>">
+                            <td>
+                                <code><?= Html::encode($m->id) ?></code>
+                                <?php if ($m->invalid && $m->invalidReason !== null): ?>
+                                    <div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i><?= Html::encode($m->invalidReason) ?></div>
+                                <?php endif; ?>
+                            </td>
                             <td class="text-muted small"><?= Html::encode($m->package) ?></td>
                             <td>
                                 <?= $statusBadge($m->status) ?>
+                                <?php if ($m->system): ?>
+                                    <span class="badge text-bg-dark" title="Системный модуль — управление из админки недоступно">системный</span>
+                                <?php endif; ?>
                                 <?php if ($m->orphan): ?>
                                     <span class="badge text-bg-dark" title="Пакет не найден в каталоге">orphan</span>
                                 <?php endif; ?>
@@ -124,20 +134,28 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
-                                    <?php if (!$m->orphan): ?>
-                                        <?= Html::a('План', ['check', 'moduleId' => $m->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
-                                    <?php endif; ?>
+                                    <?php if ($m->invalid): ?>
+                                        <?= Html::button('Установить', [
+                                            'class' => 'btn btn-sm btn-success',
+                                            'disabled' => true,
+                                            'title' => (string)$m->invalidReason,
+                                        ]) ?>
+                                    <?php else: ?>
+                                        <?php if (!$m->orphan): ?>
+                                            <?= Html::a('План', ['check', 'moduleId' => $m->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
+                                        <?php endif; ?>
 
-                                    <?php if (!$m->installed && !$m->orphan): ?>
-                                        <?= $postButton('install', $m->id, 'Установить', 'btn-success') ?>
-                                    <?php endif; ?>
+                                        <?php if (!$m->installed && !$m->orphan && !$m->system): ?>
+                                            <?= $postButton('install', $m->id, 'Установить', 'btn-success') ?>
+                                        <?php endif; ?>
 
-                                    <?php if ($m->installed && $m->hasUpdate): ?>
-                                        <?= $postButton('update', $m->id, 'Обновить', 'btn-primary') ?>
-                                    <?php endif; ?>
+                                        <?php if ($m->installed && $m->hasUpdate): ?>
+                                            <?= $postButton('update', $m->id, 'Обновить', 'btn-primary') ?>
+                                        <?php endif; ?>
 
-                                    <?php if ($m->installed && $m->editable): ?>
-                                        <?= $postButton('uninstall', $m->id, 'Удалить', 'btn-outline-danger', "Удалить модуль «{$m->id}»?") ?>
+                                        <?php if ($m->installed && $m->editable): ?>
+                                            <?= $postButton('uninstall', $m->id, 'Удалить', 'btn-outline-danger', "Удалить модуль «{$m->id}»?") ?>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -157,6 +175,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                     <thead>
                     <tr>
                         <th>Composer-пакет</th>
+                        <th>Вид</th>
                         <th>Тип</th>
                         <th>moduleId</th>
                         <th>Версия</th>
@@ -172,6 +191,9 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                     <div class="text-muted small"><?= Html::encode($p->description) ?></div>
                                 <?php endif; ?>
                             </td>
+                            <td><?= $p->isModule()
+                                    ? '<span class="badge text-bg-primary">модуль</span>'
+                                    : '<span class="badge text-bg-secondary">пакет</span>' ?></td>
                             <td class="small"><?= Html::encode($p->type) ?></td>
                             <td><?= $p->isModule() ? '<code>' . Html::encode((string)$p->moduleId) . '</code>' : '<span class="text-muted">—</span>' ?></td>
                             <td class="small"><?= Html::encode($p->composerVersion ?: '—') ?></td>
@@ -179,7 +201,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                         </tr>
                     <?php endforeach; ?>
                     <?php if ($packages === []): ?>
-                        <tr><td colspan="5" class="text-center text-muted py-4">Пакеты не найдены.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">Пакеты не найдены.</td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>

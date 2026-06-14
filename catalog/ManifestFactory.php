@@ -32,13 +32,26 @@ use Yii;
 final class ManifestFactory
 {
     /**
-     * @throws ManifestException если пакет не является валидным модулем нового контракта
+     * Собирает манифест валидного CMS-модуля нового контракта.
+     *
+     * Вызывается каталогом только для пакетов, уже помеченных `extra.bescms.kind=module`. Поэтому
+     * любое брошенное здесь исключение — это реальная ошибка конфигурации НАШЕГО модуля (а не «чужой
+     * пакет»): не переведён на новый контракт, нет moduleClass, рассинхрон id. Каталог покажет такую
+     * проблему строкой рядом с модулем (а не flash'ем на всю страницу) — см. {@see \modules\modmanNew\catalog\InvalidModule}.
+     *
+     * @throws ManifestException ошибка конфигурации CMS-модуля
      */
     public function fromPackage(DiscoveredPackage $package): ModuleManifest
     {
         if (!$package->isModule()) {
             throw new ManifestException(
-                "Пакет '{$package->composerName}' не является модулем (нет extra.moduleClass/moduleId)."
+                "Пакет '{$package->composerName}' не объявлен модулем (extra.bescms.kind должен быть 'module')."
+            );
+        }
+
+        if ($package->moduleClass === null || $package->moduleId === null) {
+            throw new ManifestException(
+                "Пакет '{$package->composerName}' помечен как модуль, но не объявляет extra.moduleClass/moduleId."
             );
         }
 
@@ -54,7 +67,8 @@ final class ManifestFactory
 
         if (!$this->implementsContract($class, DeclaresModule::class)) {
             throw new ManifestException(
-                "Класс '{$class}' должен реализовывать контракт " . DeclaresModule::class . '.'
+                "Класс '{$class}' (пакет '{$package->composerName}') ещё не переведён на новый контракт "
+                . DeclaresModule::class . ' — модуль не сконвертирован.'
             );
         }
 
