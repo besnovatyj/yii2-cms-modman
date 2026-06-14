@@ -77,6 +77,8 @@ php yii modmanNew/modules/update <moduleId>
 php yii modmanNew/modules/uninstall <moduleId>
 php yii modmanNew/modules/reconcile
 php yii modmanNew/modules/recompile
+php yii modmanNew/menu/info       # диагностика локаций меню (вкл/выкл, файл, существование, число пунктов)
+php yii modmanNew/menu/rebuild    # перекомпилировать только артефакты меню
 ```
 
 (Для консоли модуль также должен быть в `modules` console-приложения.)

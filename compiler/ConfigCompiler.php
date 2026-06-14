@@ -107,6 +107,19 @@ final class ConfigCompiler
     }
 
     /**
+     * Перекомпилировать и записать ТОЛЬКО артефакты меню — точечная операция для диагностики/обслуживания
+     * (аналог `modman/menu/rebuild`). Прочие артефакты не трогаются.
+     */
+    public function recompileMenus(): CompiledArtifacts
+    {
+        $artifacts = $this->compile();
+        foreach ($this->paths->menuLocationFiles as $location => $file) {
+            $this->writer->writeArray($file, $artifacts->menusByLocation[$location] ?? []);
+        }
+        return $artifacts;
+    }
+
+    /**
      * Записать артефакты на диск (атомарно, по одному файлу).
      */
     public function persist(CompiledArtifacts $artifacts): void
