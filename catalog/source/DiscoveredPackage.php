@@ -1,0 +1,72 @@
+<?php
+
+/*
+ * Copyright (c) 2026 Besnovatyj. Licensed under the MIT License.
+ */
+
+declare(strict_types=1);
+
+namespace modules\modmanNew\catalog\source;
+
+/**
+ * «Сырой» обнаруженный пакет — данные composer.json + путь, без создания каких-либо объектов модуля.
+ *
+ * Источники {@see ModuleSource} возвращают именно такие DTO. Превращение в типизированный
+ * {@see \modules\modmanNew\catalog\ModuleManifest} — задача {@see \modules\modmanNew\catalog\ManifestFactory}.
+ */
+final readonly class DiscoveredPackage
+{
+    /**
+     * @param array<string,string> $require       зависимости composer (name => constraint)
+     * @param array<string,string> $autoloadPsr4  PSR-4 префикс => относительный путь
+     */
+    public function __construct(
+        public string  $composerName,
+        public string  $description,
+        public string  $path,
+        public string  $type,
+        public string  $composerVersion,
+        public ?string $moduleClass,
+        public ?string $moduleId,
+        public array   $require,
+        public array   $autoloadPsr4,
+        public string  $sourceLabel,
+    ) {}
+
+    /**
+     * Собирает DTO из распарсенного composer.json. Возвращает null, если это не похоже на пакет.
+     */
+    public static function fromComposerArray(array $data, string $path, string $sourceLabel): ?self
+    {
+        if (!isset($data['name']) || !is_string($data['name'])) {
+            return null;
+        }
+
+        $extra = $data['extra'] ?? [];
+        $moduleClass = (isset($extra['moduleClass']) && is_string($extra['moduleClass'])) ? $extra['moduleClass'] : null;
+        $moduleId = (isset($extra['moduleId']) && is_string($extra['moduleId'])) ? $extra['moduleId'] : null;
+
+        $psr4 = $data['autoload']['psr-4'] ?? [];
+
+        return new self(
+            composerName: $data['name'],
+            description: (string)($data['description'] ?? ''),
+            path: $path,
+            type: (string)($data['type'] ?? ''),
+            composerVersion: (string)($data['version'] ?? ''),
+            moduleClass: $moduleClass,
+            moduleId: $moduleId,
+            require: is_array($data['require'] ?? null) ? $data['require'] : [],
+            autoloadPsr4: is_array($psr4) ? $psr4 : [],
+            sourceLabel: $sourceLabel,
+        );
+    }
+
+    /**
+     * Похоже ли на управляемый модуль (объявлены moduleClass и moduleId).
+     */
+    public function isModule(): bool
+    {
+        return $this->moduleClass !== null && $this->moduleId !== null;
+    }
+}
