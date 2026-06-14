@@ -36,15 +36,15 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMen
     /** Версия менеджера — источник истины для отображения и будущего самообновления. */
     public const string VERSION = '1.0.0';
 
-    public function init(): void
+    /**
+     * Проводка менеджера глобальная — грузится через {@see Bootstrap} (способ B) ещё до существования
+     * реестра. Поэтому здесь (хук способа A из {@see CmsModule}) лишь страховка, если Bootstrap не
+     * добавлен в app bootstrap, причём с guard'ом — чтобы не прогонять тяжёлый граф DI повторно.
+     */
+    protected function bootstrapContainer(): void
     {
-        // Раскладку controllerNamespace (в т.ч. console → \commands) и layout даёт CmsModule.
-        parent::init();
-
-        // Страховка DI на случай, если Bootstrap не добавлен в app bootstrap, — чтобы web-контроллёр
-        // всё равно работал. Основная проводка живёт в Bootstrap; здесь guard от повторного прогона.
         if (!Yii::$container->has(ModuleManager::class)) {
-            (require __DIR__ . '/config/container.php')(Yii::$container);
+            parent::bootstrapContainer();
         }
     }
 

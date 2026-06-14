@@ -121,10 +121,15 @@
   (два разных пакета на один moduleId) — в невалидные.
 - **Рантайм-поведение модуля — в тонком базовом классе `common\components\module\CmsModule`**, а не в
   каждом модуле. Природа разделена: метаданные → статические контракты (`DeclaresModule`/`Provides*`),
-  поведение экземпляра → наследование. `CmsModule` несёт только `init()` (раскладка controllerNamespace)
-  и `getLayoutPath()` (layouts из активной темы — нельзя выразить интерфейсом, т.к. это ленивый override;
-  в init компонент темы ещё не поднят). Слим старого `BaseModule` без `method_exists`-магии; legacy не
-  тронут (рядом). `modmanNew/Module` тоже на нём. Guard на отсутствие темы — бэкенд не падает.
+  поведение экземпляра → наследование. `CmsModule` несёт только `init()` (раскладка controllerNamespace,
+  достраивает значение от `parent::init()` без рефлексии/пересчёта), `getLayoutPath()` (layouts из активной
+  темы — нельзя выразить интерфейсом, т.к. это ленивый override; в init компонент темы ещё не поднят) и
+  `bootstrapContainer()` — хук **способа A** проводки DI (`/config/container.php` модуля, замена
+  `method_exists`-автовызова `setContainerConfig` на проверку файла; переопределяем — менеджер добавляет
+  guard, т.к. его контейнер грузится глобально через Bootstrap = способ B). Способ C — контракт
+  `ProvidesBootstrap` (discovery-время). Слим старого `BaseModule` без магии; legacy не тронут (рядом).
+  `modmanNew/Module` тоже на нём (init больше не нужен — namespace и DI-страховку даёт база). Guard на
+  отсутствие темы — бэкенд не падает.
 - **Иконка модуля в списке** — на стороне менеджера: фабрика читает `config.params.iconClass` в
   `ModuleManifest::$iconClass` → `ModuleView` → вьюха. Метод на модуле (как `BaseModule::getIcon`) не
   нужен — иконка нужна менеджеру для списка, а не самому модулю.
