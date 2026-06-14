@@ -14,6 +14,7 @@ use modules\modmanNew\ModuleManager;
 use Throwable;
 use Yii;
 use yii\filters\VerbFilter;
+use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\web\Response;
 
@@ -74,21 +75,21 @@ final class ModulesController extends Controller
         ]);
     }
 
-    public function actionInstall(string $moduleId): Response
+    public function actionInstall(): Response
     {
-        $this->flashReport($this->manager->install($moduleId));
+        $this->flashReport($this->manager->install($this->requireModuleId()));
         return $this->redirect(['index']);
     }
 
-    public function actionUninstall(string $moduleId): Response
+    public function actionUninstall(): Response
     {
-        $this->flashReport($this->manager->uninstall($moduleId));
+        $this->flashReport($this->manager->uninstall($this->requireModuleId()));
         return $this->redirect(['index']);
     }
 
-    public function actionUpdate(string $moduleId): Response
+    public function actionUpdate(): Response
     {
-        $this->flashReport($this->manager->update($moduleId));
+        $this->flashReport($this->manager->update($this->requireModuleId()));
         return $this->redirect(['index']);
     }
 
@@ -111,6 +112,23 @@ final class ModulesController extends Controller
             Yii::$app->session->addFlash('error', 'Ошибка перекомпиляции: ' . $e->getMessage());
         }
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Достаёт обязательный moduleId из тела POST-запроса (формы кладут его в hiddenInput).
+     *
+     * Важно: web-контроллёр Yii биндит аргументы экшена из query-параметров, а не из тела POST,
+     * поэтому мутирующие действия читают moduleId отсюда, а не через параметр метода.
+     *
+     * @throws BadRequestHttpException если параметр отсутствует
+     */
+    private function requireModuleId(): string
+    {
+        $moduleId = (string)Yii::$app->request->post('moduleId', '');
+        if ($moduleId === '') {
+            throw new BadRequestHttpException('Отсутствует обязательный параметр moduleId.');
+        }
+        return $moduleId;
     }
 
     /**

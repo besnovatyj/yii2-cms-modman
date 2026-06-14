@@ -41,6 +41,11 @@ final class LifecyclePlanner
         if ($this->registry->isInstalled($manifest->id)) {
             $blockers[] = "Модуль '{$manifest->id}' уже установлен.";
         }
+        if (!$manifest->editable) {
+            // Системный модуль (например, сам менеджер) ставится установочным скриптом CMS, а из
+            // админки неприкасаем — симметрично запрету удаления в planUninstall().
+            $blockers[] = "Модуль '{$manifest->id}' системный — установка через менеджер недоступна.";
+        }
 
         try {
             $this->deps->assertCanInstall($manifest);
