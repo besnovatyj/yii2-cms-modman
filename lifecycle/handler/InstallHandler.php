@@ -74,9 +74,12 @@ final class InstallHandler
             $report,
         );
 
-        // write-ahead intent: незавершённая установка будет видна reconcile.
-        $this->registry->save($this->intentState($manifest, $operationId));
-        $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::BeforeInstall, $moduleId, $manifest));
+        // write-ahead intent: незавершённая установка будет видна reconcile. Выполняется под
+        // блокировкой (внутри executor), чтобы параллельный запрос не успел изменить реестр до lock.
+        $intent = function () use ($manifest, $moduleId, $operationId): void {
+            $this->registry->save($this->intentState($manifest, $operationId));
+            $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::BeforeInstall, $moduleId, $manifest));
+        };
 
         $commit = function (OperationContext $ctx) use ($manifest, $operationId): void {
             $now = time();
@@ -99,7 +102,7 @@ final class InstallHandler
             $this->registry->remove($moduleId);
         };
 
-        $this->executor->execute($context, [$this->runMigrations, $this->createDirectories], $commit, $rollback);
+        $this->executor->execute($context, [$this->runMigrations, $this->createDirectories], $commit, $rollback, $intent);
 
         if ($report->isSuccessful()) {
             $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::AfterInstall, $moduleId, $manifest));

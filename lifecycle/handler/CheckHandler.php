@@ -45,4 +45,12 @@ final class CheckHandler
             ? $this->planner->planUpdate($manifest)
             : $this->planner->planInstall($manifest);
     }
+
+    /**
+     * Предпросмотр удаления (dry-run). Планировщик сам вернёт блокеры, если модуль не установлен.
+     */
+    public function checkUninstall(string $moduleId): LifecyclePlan
+    {
+        return $this->planner->planUninstall($moduleId);
+    }
 }

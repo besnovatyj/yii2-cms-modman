@@ -31,6 +31,7 @@ use modules\modman\lifecycle\step\RevertMigrationsStep;
 use modules\modman\lifecycle\step\RunMigrationsStep;
 use modules\modman\migration\MigrationOwnershipRepository;
 use modules\modman\migration\ModuleMigrationRunner;
+use modules\modman\migration\StandardMigrationHistory;
 use modules\modman\ModuleManager;
 use modules\modman\registry\ModuleRegistry;
 use yii\di\Container;
@@ -103,8 +104,14 @@ return function (Container $container): void {
     // --- Миграции ----------------------------------------------------------------------------
     $container->setSingleton(MigrationOwnershipRepository::class, static fn(): MigrationOwnershipRepository
         => new MigrationOwnershipRepository(Yii::$app->db));
+    $container->setSingleton(StandardMigrationHistory::class, static fn(): StandardMigrationHistory
+        => new StandardMigrationHistory(Yii::$app->db));
     $container->setSingleton(ModuleMigrationRunner::class, static fn(Container $c): ModuleMigrationRunner
-        => new ModuleMigrationRunner(Yii::$app->db, $c->get(MigrationOwnershipRepository::class)));
+        => new ModuleMigrationRunner(
+            Yii::$app->db,
+            $c->get(MigrationOwnershipRepository::class),
+            $c->get(StandardMigrationHistory::class),
+        ));
 
     // --- Шаги lifecycle ----------------------------------------------------------------------
     $container->setSingleton(RunMigrationsStep::class, static fn(Container $c): RunMigrationsStep
@@ -168,7 +175,6 @@ return function (Container $container): void {
             $c->get(ModuleRegistry::class),
             $c->get(PackageCatalog::class),
             $c->get(ModuleMigrationRunner::class),
-            $c->get(MigrationOwnershipRepository::class),
             $c->get(ConfigCompiler::class),
             $c->get(LifecycleLock::class),
         ));

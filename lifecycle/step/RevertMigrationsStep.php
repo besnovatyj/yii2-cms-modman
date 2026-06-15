@@ -47,8 +47,9 @@ final class RevertMigrationsStep implements LifecycleStep
             return;
         }
 
-        // Пакет/файлы миграций недоступны — откатить down() нельзя, чистим только владение.
-        $this->owners->forgetModule($context->moduleId);
+        // Пакет/файлы миграций недоступны — откатить down() нельзя, чистим обе истории (владение
+        // и штатную Yii), чтобы они не разошлись; таблицы БД при этом могли остаться.
+        $this->runner->forgetModule($context->moduleId);
         $context->report->warning(
             'Файлы миграций недоступны: очищена история владения, но таблицы БД могли остаться. '
             . 'Проверьте вручную или через reconcile.'

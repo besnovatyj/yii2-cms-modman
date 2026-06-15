@@ -34,16 +34,22 @@ final class LifecycleExecutor
     ) {}
 
     /**
-     * @param LifecycleStep[]                 $steps
-     * @param callable(OperationContext):void $commit   commit-at-end: финальная запись реестра
-     * @param callable(OperationContext):void $rollback откат изменения реестра при сбое
+     * @param LifecycleStep[]                  $steps
+     * @param callable(OperationContext):void  $commit   commit-at-end: финальная запись реестра
+     * @param callable(OperationContext):void  $rollback откат изменения реестра при сбое
+     * @param (callable(OperationContext):void)|null $intent write-ahead intent (маркер «операция
+     *        началась»): выполняется ПЕРВЫМ, но уже ПОД блокировкой — иначе два параллельных запроса
+     *        успевали изменить реестр до взятия мьютекса. При сбое откатывается через $rollback.
      */
-    public function execute(OperationContext $context, array $steps, callable $commit, callable $rollback): void
+    public function execute(OperationContext $context, array $steps, callable $commit, callable $rollback, ?callable $intent = null): void
     {
-        $this->lock->withLock(function () use ($context, $steps, $commit, $rollback): void {
+        $this->lock->withLock(function () use ($context, $steps, $commit, $rollback, $intent): void {
             Yii::info("► Старт операции «{$context->type->value}» над модулем '{$context->moduleId}'.", 'modman/lifecycle');
             $executed = [];
             try {
+                if ($intent !== null) {
+                    $intent($context);
+                }
                 foreach ($steps as $step) {
                     if (!$step->shouldRun($context)) {
                         continue;

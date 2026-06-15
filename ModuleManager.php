@@ -22,6 +22,7 @@ use modules\modman\lifecycle\plan\LifecyclePlan;
 use modules\modman\registry\ModuleRegistry;
 use modules\modman\registry\ModuleState;
 use modules\modman\registry\ModuleStatus;
+use Yii;
 
 /**
  * Фасад системы управления модулями — единый публичный API для драйверов (web-контроллёр, console).
@@ -45,6 +46,14 @@ final class ModuleManager
     public function check(string $moduleId): LifecyclePlan
     {
         return $this->checkHandler->check($moduleId);
+    }
+
+    /**
+     * План удаления модуля (dry-run, ничего не меняет).
+     */
+    public function checkUninstall(string $moduleId): LifecyclePlan
+    {
+        return $this->checkHandler->checkUninstall($moduleId);
     }
 
     public function install(string $moduleId): OperationReport
@@ -101,26 +110,31 @@ final class ModuleManager
 
         foreach ($manifests as $id => $manifest) {
             $state = $this->registry->get($id);
-            $installed = $state?->status->isActive() ?? false;
             // Системный модуль (editable=false): часть ядра, ставится установочным скриптом, из админки
-            // неприкасаем. Сам менеджер — такой же: бутстрапится приложением вручную, поэтому показываем
-            // его «активным/системным», а не «доступен к установке», и без кнопок install/uninstall.
+            // неприкасаем. Сам менеджер — такой же: бутстрапится приложением вручную, в реестр не пишется.
             $system = !$manifest->editable;
-            $hasUpdate = $installed
+            // Реальная активность системного модуля — это его фактическая регистрация в приложении,
+            // а НЕ просто наличие пакета на диске (иначе любой не-editable пакет выглядел бы «системным
+            // активным»). Для editable-модулей источник истины — реестр.
+            $systemActive = $system && Yii::$app->hasModule($id);
+            $installed = $state?->status->isActive() ?? $systemActive;
+            // hasUpdate имеет смысл только для управляемого (editable) модуля с записью в реестре.
+            $hasUpdate = $state !== null
+                && $state->status->isActive()
                 && ($manifest->version->isGreaterThan($state->version) || $manifest->checksum !== $state->manifestChecksum);
 
             $views[] = new ModuleView(
                 id: $id,
                 package: $manifest->package,
                 availableVersion: $manifest->version->value,
-                installedVersion: $state?->version->value,
-                status: $state?->status->value ?? ($system ? 'system' : ModuleStatus::Discovered->value),
+                installedVersion: $state?->version->value ?? ($systemActive ? $manifest->version->value : null),
+                status: $state?->status->value ?? ($systemActive ? 'system' : ModuleStatus::Discovered->value),
                 editable: $manifest->editable,
                 installed: $installed,
                 hasUpdate: $hasUpdate,
                 iconClass: $manifest->iconClass,
                 hasOptions: $manifest->contributions->options !== [],
-                system: $system,
+                system: $systemActive,
             );
         }
 

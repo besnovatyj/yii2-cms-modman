@@ -74,8 +74,12 @@ final class UninstallHandler
             $report,
         );
 
-        $this->registry->save($state->withStatus(ModuleStatus::Removing, $operationId));
-        $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::BeforeUninstall, $moduleId, $manifest));
+        // Маркер «удаление началось» — под блокировкой (внутри executor), чтобы не было гонки
+        // с параллельным запросом до взятия мьютекса.
+        $intent = function () use ($state, $manifest, $moduleId, $operationId): void {
+            $this->registry->save($state->withStatus(ModuleStatus::Removing, $operationId));
+            $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::BeforeUninstall, $moduleId, $manifest));
+        };
 
         $commit = function () use ($moduleId): void {
             $this->registry->remove($moduleId);
@@ -86,7 +90,7 @@ final class UninstallHandler
             $this->registry->save($state->withStatus(ModuleStatus::Failed, $operationId));
         };
 
-        $this->executor->execute($context, [$this->revertMigrations, $this->removeDirectories], $commit, $rollback);
+        $this->executor->execute($context, [$this->revertMigrations, $this->removeDirectories], $commit, $rollback, $intent);
 
         if ($report->isSuccessful()) {
             $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::AfterUninstall, $moduleId, $manifest));

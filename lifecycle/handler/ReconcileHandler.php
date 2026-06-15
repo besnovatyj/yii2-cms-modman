@@ -14,7 +14,6 @@ use modules\modman\compiler\ConfigCompiler;
 use modules\modman\lifecycle\LifecycleLock;
 use modules\modman\lifecycle\OperationReport;
 use modules\modman\lifecycle\OperationType;
-use modules\modman\migration\MigrationOwnershipRepository;
 use modules\modman\migration\ModuleMigrationRunner;
 use modules\modman\registry\ModuleRegistry;
 use modules\modman\registry\ModuleState;
@@ -37,12 +36,11 @@ use Throwable;
 final class ReconcileHandler
 {
     public function __construct(
-        private readonly ModuleRegistry               $registry,
-        private readonly PackageCatalog               $catalog,
-        private readonly ModuleMigrationRunner        $runner,
-        private readonly MigrationOwnershipRepository $owners,
-        private readonly ConfigCompiler               $compiler,
-        private readonly LifecycleLock                $lock,
+        private readonly ModuleRegistry        $registry,
+        private readonly PackageCatalog        $catalog,
+        private readonly ModuleMigrationRunner $runner,
+        private readonly ConfigCompiler        $compiler,
+        private readonly LifecycleLock         $lock,
     ) {}
 
     /**
@@ -97,8 +95,8 @@ final class ReconcileHandler
         if ($manifest !== null && $manifest->contributions->hasMigrations()) {
             $this->runner->down($id, $manifest->contributions->migrationPath, $manifest->contributions->migrationNamespace);
         } else {
-            $this->owners->forgetModule($id);
-            $report->warning("'{$id}': файлы миграций недоступны — очищена только история владения.");
+            $this->runner->forgetModule($id);
+            $report->warning("'{$id}': файлы миграций недоступны — очищены обе истории миграций (БД могла остаться).");
         }
 
         if ($manifest !== null) {

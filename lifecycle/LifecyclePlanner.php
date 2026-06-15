@@ -97,6 +97,18 @@ final class LifecyclePlanner
             $warnings[] = 'Пакет модуля не найден в каталоге — миграции/директории откатить не удастся.';
         }
 
+        // Удаление тоже завершается recompile, а при наличии директорий — их физическим удалением.
+        // Недоступность записи гарантирует частично удалённый модуль, поэтому это блокер, а не warning
+        // (паритет с planInstall/planUpdate).
+        foreach ($this->checkArtifactsWritable() as $blocker) {
+            $blockers[] = $blocker;
+        }
+        if ($manifest !== null && $manifest->contributions->directories !== []) {
+            foreach ($this->checkStaticWritable() as $blocker) {
+                $blockers[] = $blocker;
+            }
+        }
+
         $steps = [];
         if ($manifest !== null && $manifest->contributions->hasMigrations()) {
             $steps[] = new PlannedStep('Откатить миграции БД модуля', $manifest->contributions->migrationPath);
@@ -226,23 +238,45 @@ final class LifecyclePlanner
      */
     private function checkWritable(ModuleManifest $manifest): array
     {
-        $warnings = [];
+        $blockers = $this->checkArtifactsWritable();
 
+        if ($manifest->contributions->directories !== []) {
+            $blockers = array_merge($blockers, $this->checkStaticWritable());
+        }
+
+        return $blockers;
+    }
+
+    /**
+     * Запись артефактов нужна ЛЮБОЙ операции (любая завершается recompile), поэтому проверяется и при
+     * установке/обновлении, и при удалении.
+     *
+     * @return string[]
+     */
+    private function checkArtifactsWritable(): array
+    {
         foreach ($this->paths->all() as $artifact) {
             $dir = dirname($artifact);
             if (!is_dir($dir) || !is_writable($dir)) {
-                $warnings[] = "Директория артефактов недоступна для записи: {$dir}";
-                break;
+                return ["Директория артефактов недоступна для записи: {$dir}"];
             }
         }
 
-        if ($manifest->contributions->directories !== []) {
-            $staticBase = Yii::getAlias('@static', false);
-            if ($staticBase === false || !is_writable($staticBase)) {
-                $warnings[] = "Домен статики недоступен для записи: " . ($staticBase ?: '@static');
-            }
+        return [];
+    }
+
+    /**
+     * Запись в домен статики нужна для создания/удаления директорий модуля.
+     *
+     * @return string[]
+     */
+    private function checkStaticWritable(): array
+    {
+        $staticBase = Yii::getAlias('@static', false);
+        if ($staticBase === false || !is_writable($staticBase)) {
+            return ["Домен статики недоступен для записи: " . ($staticBase ?: '@static')];
         }
 
-        return $warnings;
+        return [];
     }
 }

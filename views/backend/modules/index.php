@@ -177,7 +177,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                             <?= Html::a('Настройки', ['/Config/backend/config/index', 'category' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
                                         <?php endif; ?>
 
-                                        <?php if (!$m->installed && !$m->orphan && !$m->system): ?>
+                                        <?php if (!$m->installed && !$m->orphan && $m->editable): ?>
                                             <?= $postButton('install', $m->id, 'Установить', 'btn-success') ?>
                                         <?php endif; ?>
 
@@ -186,6 +186,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                         <?php endif; ?>
 
                                         <?php if ($m->installed && $m->editable): ?>
+                                            <?= Html::a('План удаления', ['check', 'moduleId' => $m->id, 'op' => 'uninstall'], ['class' => 'btn btn-sm btn-outline-info']) ?>
                                             <?= $postButton('uninstall', $m->id, 'Удалить', 'btn-outline-danger', "Удалить модуль «{$m->id}»?") ?>
                                         <?php endif; ?>
                                     <?php endif; ?>

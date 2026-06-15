@@ -75,8 +75,12 @@ final class UpdateHandler
             $report,
         );
 
-        $this->registry->save($state->withStatus(ModuleStatus::Updating, $operationId));
-        $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::BeforeUpdate, $moduleId, $manifest));
+        // Маркер «обновление началось» — под блокировкой (внутри executor), чтобы не было гонки
+        // с параллельным запросом до взятия мьютекса.
+        $intent = function () use ($state, $manifest, $moduleId, $operationId): void {
+            $this->registry->save($state->withStatus(ModuleStatus::Updating, $operationId));
+            $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::BeforeUpdate, $moduleId, $manifest));
+        };
 
         $commit = function (OperationContext $ctx) use ($manifest, $state, $operationId): void {
             $merged = array_values(array_unique(array_merge($state->appliedMigrations, $ctx->appliedMigrations)));
@@ -99,7 +103,7 @@ final class UpdateHandler
             $this->registry->save($state->withStatus(ModuleStatus::Installed));
         };
 
-        $this->executor->execute($context, [$this->runMigrations, $this->createDirectories], $commit, $rollback);
+        $this->executor->execute($context, [$this->runMigrations, $this->createDirectories], $commit, $rollback, $intent);
 
         if ($report->isSuccessful()) {
             $this->events->dispatch(new ModuleLifecycleEvent(LifecyclePhase::AfterUpdate, $moduleId, $manifest));

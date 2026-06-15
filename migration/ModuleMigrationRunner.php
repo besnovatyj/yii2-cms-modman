@@ -28,6 +28,7 @@ final class ModuleMigrationRunner
     public function __construct(
         private readonly Connection                    $db,
         private readonly MigrationOwnershipRepository  $owners,
+        private readonly StandardMigrationHistory      $standardHistory,
     ) {}
 
     /**
@@ -46,8 +47,20 @@ final class ModuleMigrationRunner
                 continue;
             }
 
+            // Миграция уже накатана обычным `yii migrate`: повторно не запускаем, лишь закрепляем
+            // владельца — иначе up() пересоздаёт уже существующие таблицы.
+            if ($this->standardHistory->isApplied($migration['version'])) {
+                $this->owners->record($moduleId, $migration['version'], $namespace, $migration['file']);
+                Yii::info(
+                    "[{$moduleId}] миграция {$migration['version']} уже в штатной истории — зафиксирован владелец без запуска.",
+                    'modman/migration',
+                );
+                continue;
+            }
+
             $output = $this->run($migration, 'up');
             $this->owners->record($moduleId, $migration['version'], $namespace, $migration['file']);
+            $this->standardHistory->record($migration['version']);
             $applied[] = $migration['version'];
             Yii::info(
                 "[{$moduleId}] применена миграция {$migration['version']}" . $this->formatOutput($output),
@@ -70,6 +83,21 @@ final class ModuleMigrationRunner
     }
 
     /**
+     * Забывает все миграции модуля в обеих историях БЕЗ запуска down().
+     *
+     * Используется, когда файлы миграций недоступны (down() выполнить нельзя): чистим и собственный
+     * учёт владения, и штатную историю Yii, чтобы они не разошлись. Таблицы БД при этом могут
+     * остаться — это отражается предупреждением на стороне вызывающего шага/reconcile.
+     */
+    public function forgetModule(string $moduleId): void
+    {
+        foreach ($this->owners->appliedVersions($moduleId) as $version) {
+            $this->standardHistory->forget($version);
+        }
+        $this->owners->forgetModule($moduleId);
+    }
+
+    /**
      * Откатывает указанные версии (используется для компенсации шага установки).
      *
      * @param string[] $versions
@@ -88,11 +116,13 @@ final class ModuleMigrationRunner
             if ($migration === null) {
                 Yii::warning("[{$moduleId}] файл миграции для отката не найден: {$version}", 'modman/migration');
                 $this->owners->forget($moduleId, $version);
+                $this->standardHistory->forget($version);
                 continue;
             }
 
             $output = $this->run($migration, 'down');
             $this->owners->forget($moduleId, $version);
+            $this->standardHistory->forget($version);
             $reverted[] = $version;
             Yii::info(
                 "[{$moduleId}] откачена миграция {$version}" . $this->formatOutput($output),

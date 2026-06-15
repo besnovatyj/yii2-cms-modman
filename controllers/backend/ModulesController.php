@@ -69,11 +69,13 @@ final class ModulesController extends Controller
         ]);
     }
 
-    public function actionCheck(string $moduleId): string
+    public function actionCheck(string $moduleId, string $op = ''): string
     {
-        return $this->render('plan', [
-            'plan' => $this->manager->check($moduleId),
-        ]);
+        $plan = $op === 'uninstall'
+            ? $this->manager->checkUninstall($moduleId)
+            : $this->manager->check($moduleId);
+
+        return $this->render('plan', ['plan' => $plan]);
     }
 
     public function actionInstall(): Response

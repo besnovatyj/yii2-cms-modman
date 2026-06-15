@@ -75,5 +75,13 @@ $this->title = "План операции «{$plan->type->value}» — {$plan->m
         <?= Html::hiddenInput('moduleId', $plan->moduleId) ?>
         <?= Html::submitButton('<i class="bi bi-arrow-up-circle me-1"></i> Обновить', ['class' => 'btn btn-primary']) ?>
         <?= Html::endForm() ?>
+    <?php elseif ($plan->isFeasible() && $plan->type->value === 'uninstall'): ?>
+        <?= Html::beginForm(['uninstall'], 'post') ?>
+        <?= Html::hiddenInput('moduleId', $plan->moduleId) ?>
+        <?= Html::submitButton('<i class="bi bi-trash me-1"></i> Удалить', [
+            'class' => 'btn btn-outline-danger',
+            'data' => ['confirm' => "Удалить модуль «{$plan->moduleId}»?"],
+        ]) ?>
+        <?= Html::endForm() ?>
     <?php endif; ?>
 </div>
