@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace modules\modman\catalog;
 
+use JsonException;
 use modules\modman\catalog\exception\ManifestException;
 use modules\modman\catalog\source\DiscoveredPackage;
 use modules\modman\contract\DeclaresModule;
@@ -37,9 +38,9 @@ final class ManifestFactory
      * Вызывается каталогом только для пакетов, уже помеченных `extra.bescms.kind=module`. Поэтому
      * любое брошенное здесь исключение — это реальная ошибка конфигурации НАШЕГО модуля (а не «чужой
      * пакет»): не переведён на новый контракт, нет moduleClass, рассинхрон id. Каталог покажет такую
-     * проблему строкой рядом с модулем (а не flash'ем на всю страницу) — см. {@see \modules\modman\catalog\InvalidModule}.
+     * проблему строкой рядом с модулем (а не flash'ем на всю страницу) — см. {@see InvalidModule}.
      *
-     * @throws ManifestException ошибка конфигурации CMS-модуля
+     * @throws ManifestException|JsonException ошибка конфигурации CMS-модуля
      */
     public function fromPackage(DiscoveredPackage $package): ModuleManifest
     {
