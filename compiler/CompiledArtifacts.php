@@ -24,6 +24,7 @@ final readonly class CompiledArtifacts
      * @param array<string, array>   $logChannels     channelId => спека
      * @param array<string, array>   $options         id модуля => опции
      * @param array<string, array>   $menusByLocation location => дерево меню
+     * @param array<string, string>  $viewSources     moduleId => алиасный путь views/ (+ ключ @app/views)
      * @param string[]               $warnings        нефатальные проблемы компиляции
      */
     public function __construct(
@@ -33,6 +34,7 @@ final readonly class CompiledArtifacts
         public array $logChannels,
         public array $options,
         public array $menusByLocation,
+        public array $viewSources = [],
         public array $warnings = [],
     ) {}
 }

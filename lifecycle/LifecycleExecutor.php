@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace modules\modman\lifecycle;
 
-use common\components\theme\Theme;
 use modules\modman\compiler\ConfigCompiler;
 use modules\modman\lifecycle\step\LifecycleStep;
 use Throwable;
@@ -62,8 +61,7 @@ final class LifecycleExecutor
                 }
 
                 $commit($context);              // commit-at-end
-                $this->compiler->recompile();   // производная проекция
-                $this->renewThemePathMap($context);
+                $this->compiler->recompile();   // производная проекция (в т.ч. manifest источников представлений)
 
                 $this->logReport($context, "✔ Операция «{$context->type->value}» над '{$context->moduleId}' завершена.");
             } catch (Throwable $e) {
@@ -79,27 +77,10 @@ final class LifecycleExecutor
                 }
 
                 $this->safeRecompile($context);
-                $this->renewThemePathMap($context);
 
                 $this->logReport($context, "✖ Операция «{$context->type->value}» над '{$context->moduleId}' откачена.");
             }
         });
-    }
-
-    /**
-     * Обновляет карту представлений темы после изменения набора установленных модулей (как старый
-     * `Theme::renewPathMap()`): иначе темизированные view модуля могут не появиться/не исчезнуть до
-     * отдельного обновления. Это деривативная проекция, как и recompile, поэтому здесь, после неё.
-     * Сбой темизации не должен валить операцию — ловим и пишем в лог.
-     */
-    private function renewThemePathMap(OperationContext $context): void
-    {
-        try {
-            new Theme()->renewPathMap();
-        } catch (Throwable $e) {
-            $context->report->warning('Не удалось обновить карту представлений темы: ' . $e->getMessage());
-            Yii::warning("[{$context->moduleId}] карта представлений темы не обновлена: {$e->getMessage()}", 'modman/lifecycle');
-        }
     }
 
     /**

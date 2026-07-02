@@ -28,6 +28,8 @@ return [
         'components' => '@config-dyn-gen/componentsConfigFile.php',
         'logChannels' => '@config-dyn-gen/logChannelsConfigFile.php',
         'options' => '@config-dyn-gen/moduleOptions.php',
+        // Тема-НЕзависимый манифест источников представлений (см. common params 'moduleViewSourcesFile').
+        'viewSources' => '@config-dyn-gen/moduleViewSources.php',
     ],
 
     // Локации меню (location => файл/включённость). Совпадает по смыслу с конфигом старого modman.

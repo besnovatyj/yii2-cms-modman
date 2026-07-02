@@ -5,7 +5,8 @@
   "license": "MIT",
   "require": {
     "php": ">=8.4",
-    "yiisoft/yii2": "~2.0.0"
+    "yiisoft/yii2": "~2.0.0",
+    "besnovatyj/yii2-cms-contracts": "^1.0"
   },
   "suggest": {
     "composer/semver": "Полноценная проверка ограничений версий (^, ~, диапазоны) в зависимостях модулей"

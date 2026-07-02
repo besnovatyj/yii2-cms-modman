@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace modules\modman\compiler;
 
+use Besnovatyj\Contracts\theme\ViewSourcesManifest;
 use modules\modman\catalog\ModuleManifest;
 use modules\modman\catalog\PackageCatalog;
 use modules\modman\registry\ModuleRegistry;
@@ -30,6 +31,7 @@ final class ConfigCompiler
         private readonly MenuCompiler   $menuCompiler,
         private readonly AtomicWriter   $writer,
         private readonly ArtifactPaths  $paths,
+        private readonly ViewSourcesResolver $viewSourcesResolver,
     ) {}
 
     /**
@@ -43,6 +45,8 @@ final class ConfigCompiler
         $logChannels = [];
         $options = [];
         $menuContributions = [];
+        // Тема-НЕзависимый манифест источников представлений: корневой ключ приложения + модули.
+        $viewSources = [ViewSourcesManifest::APP_VIEWS_KEY => ''];
         $warnings = [];
         $compiled = [];
 
@@ -51,7 +55,7 @@ final class ConfigCompiler
         // — модуль «исчезал» бы из приложения после любой install/uninstall.
         foreach ($this->catalog->manifests() as $id => $manifest) {
             if (!$manifest->editable) {
-                $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $warnings);
+                $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $warnings);
                 $compiled[$id] = true;
             }
         }
@@ -68,7 +72,7 @@ final class ConfigCompiler
                 continue;
             }
 
-            $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $warnings);
+            $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $warnings);
             $compiled[$id] = true;
         }
 
@@ -79,6 +83,7 @@ final class ConfigCompiler
         ksort($components);
         ksort($logChannels);
         ksort($options);
+        ksort($viewSources);
         sort($bootstrap);
 
         return new CompiledArtifacts(
@@ -88,6 +93,7 @@ final class ConfigCompiler
             logChannels: $logChannels,
             options: $options,
             menusByLocation: $menusByLocation,
+            viewSources: $viewSources,
             warnings: $warnings,
         );
     }
@@ -125,6 +131,7 @@ final class ConfigCompiler
         $this->writer->writeArray($this->paths->componentsConfig, $artifacts->components);
         $this->writer->writeArray($this->paths->logChannelsConfig, $artifacts->logChannels);
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
+        $this->writer->writeArray($this->paths->viewSourcesConfig, $artifacts->viewSources);
 
         foreach ($this->paths->menuLocationFiles as $location => $file) {
             $this->writer->writeArray($file, $artifacts->menusByLocation[$location] ?? []);
@@ -139,9 +146,10 @@ final class ConfigCompiler
      * @param string[]             $bootstrap
      * @param array<string, array> $components
      * @param array<string, array> $logChannels
-     * @param array<string, array> $options
-     * @param array<int, array>    $menuContributions
-     * @param string[]             $warnings
+     * @param array<string, array>  $options
+     * @param array<int, array>     $menuContributions
+     * @param array<string, string> $viewSources
+     * @param string[]              $warnings
      */
     private function addManifest(
         ModuleManifest $manifest,
@@ -151,10 +159,17 @@ final class ConfigCompiler
         array &$logChannels,
         array &$options,
         array &$menuContributions,
+        array &$viewSources,
         array &$warnings,
     ): void {
         $id = $manifest->id;
         $modules[$id] = $manifest->compiledModuleConfig();
+
+        // Источник представлений модуля (алиасный путь views/) для тема-независимого манифеста.
+        $sourceAlias = $this->viewSourcesResolver->sourceAlias($manifest->moduleClass);
+        if ($sourceAlias !== null) {
+            $viewSources[$id] = $sourceAlias;
+        }
 
         foreach ($manifest->contributions->bootstrap as $class) {
             if (!in_array($class, $bootstrap, true)) {

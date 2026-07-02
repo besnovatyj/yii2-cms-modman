@@ -15,6 +15,7 @@ use modules\modman\compiler\ArtifactPaths;
 use modules\modman\compiler\AtomicWriter;
 use modules\modman\compiler\ConfigCompiler;
 use modules\modman\compiler\MenuCompiler;
+use modules\modman\compiler\ViewSourcesResolver;
 use modules\modman\deps\DependencyResolver;
 use modules\modman\events\ModuleLifecycleDispatcher;
 use modules\modman\lifecycle\handler\CheckHandler;
@@ -66,6 +67,7 @@ return function (Container $container): void {
             componentsConfig: Yii::getAlias($params['artifacts']['components']),
             logChannelsConfig: Yii::getAlias($params['artifacts']['logChannels']),
             optionsConfig: Yii::getAlias($params['artifacts']['options']),
+            viewSourcesConfig: Yii::getAlias($params['artifacts']['viewSources']),
             menuLocationFiles: $menuFiles,
         );
     });
@@ -88,6 +90,7 @@ return function (Container $container): void {
     // --- Компилятор --------------------------------------------------------------------------
     $container->setSingleton(MenuCompiler::class, static fn(): MenuCompiler
         => new MenuCompiler(array_keys($params['menuLocations']), $params['menuDefaults']));
+    $container->setSingleton(ViewSourcesResolver::class, ViewSourcesResolver::class);
     $container->setSingleton(ConfigCompiler::class, static fn(Container $c): ConfigCompiler
         => new ConfigCompiler(
             $c->get(ModuleRegistry::class),
@@ -95,6 +98,7 @@ return function (Container $container): void {
             $c->get(MenuCompiler::class),
             $c->get(AtomicWriter::class),
             $c->get(ArtifactPaths::class),
+            $c->get(ViewSourcesResolver::class),
         ));
 
     // --- Зависимости -------------------------------------------------------------------------
