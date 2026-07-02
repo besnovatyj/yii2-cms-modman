@@ -4,6 +4,7 @@
   "type": "yii2-extension",
   "license": "MIT",
   "require": {
+    "besnovatyj/yii2-cms-kernel": "^1.0",
     "php": ">=8.4",
     "yiisoft/yii2": "~2.0.0",
     "besnovatyj/yii2-cms-contracts": "^1.0"
