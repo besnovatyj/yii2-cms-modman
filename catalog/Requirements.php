@@ -12,7 +12,7 @@ namespace modules\modman\catalog;
  * Типизированные требования модуля (зависимости).
  *
  * Заменяет «голый массив» старого modman. Собирается {@see ManifestFactory} из результата
- * {@see \modules\modman\contract\ProvidesDependencies::dependencies()}.
+ * {@see \Besnovatyj\Contracts\module\ProvidesDependencies::dependencies()}.
  */
 final readonly class Requirements
 {

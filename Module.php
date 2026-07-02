@@ -9,9 +9,9 @@ declare(strict_types=1);
 namespace modules\modman;
 
 use common\components\module\CmsModule;
-use modules\modman\contract\DeclaresModule;
-use modules\modman\contract\ProvidesAdminMenu;
-use modules\modman\contract\ProvidesLogChannels;
+use Besnovatyj\Contracts\module\DeclaresModule;
+use Besnovatyj\Contracts\module\ProvidesAdminMenu;
+use Besnovatyj\Contracts\module\ProvidesLogChannels;
 use Yii;
 
 /**

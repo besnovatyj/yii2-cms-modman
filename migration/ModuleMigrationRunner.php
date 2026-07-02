@@ -18,7 +18,7 @@ use yii\db\Migration;
  * Программный запуск миграций модуля из веб/консоли с учётом владельца.
  *
  * В отличие от старого modman, путь и namespace миграций берутся из манифеста (контракт
- * {@see \modules\modman\contract\ProvidesMigrations}), а не угадываются парсингом PHP. Применённые
+ * {@see \Besnovatyj\Contracts\module\ProvidesMigrations}), а не угадываются парсингом PHP. Применённые
  * версии фиксируются за модулем в {@see MigrationOwnershipRepository}, поэтому:
  *  - uninstall откатывает строго свои миграции;
  *  - update применяет только pending (новые) миграции, без down→up.

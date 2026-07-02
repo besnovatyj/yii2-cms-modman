@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\contract;
+namespace modules\modman\contract\_backup;
 
 /**
  * Модуль требует директории на домене статики для своей работы.
