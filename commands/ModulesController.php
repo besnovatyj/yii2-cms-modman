@@ -27,10 +27,20 @@ use yii\helpers\Console;
  *  - `php yii modman/modules/uninstall <moduleId>`
  *  - `php yii modman/modules/update <moduleId>`
  *  - `php yii modman/modules/reconcile`
+ *  - `php yii modman/modules/sync [--adoptAll]`
  *  - `php yii modman/modules/recompile`
  */
 final class ModulesController extends Controller
 {
+    /**
+     * Усыновить как installed ВСЕ обнаруженные editable-модули, даже без доказательств установки
+     * (нет применённых миграций и записи в реестре). Крайняя мера восстановления для `sync`.
+     *
+     * Нетипизировано намеренно: Yii console присваивает значение опции строкой ('1'), приведение
+     * к bool делаем явно в {@see actionSync()}.
+     */
+    public $adoptAll = false;
+
     public function __construct(
         $id,
         $module,
@@ -38,6 +48,16 @@ final class ModulesController extends Controller
         $config = [],
     ) {
         parent::__construct($id, $module, $config);
+    }
+
+    public function options($actionID): array
+    {
+        return $actionID === 'sync' ? ['adoptAll'] : [];
+    }
+
+    public function optionAliases(): array
+    {
+        return ['a' => 'adoptAll'];
     }
 
     public function actionList(): int
@@ -85,6 +105,18 @@ final class ModulesController extends Controller
     public function actionReconcile(): int
     {
         return $this->printReport($this->manager->reconcile());
+    }
+
+    /**
+     * Пересобрать `modules-state.php` из фактического состояния (каталог + история миграций) и
+     * перекомпилировать артефакты. Восстановление реестра без ручной правки.
+     *
+     * Флаг `--adoptAll` (`-a`) усыновляет все обнаруженные editable-модули, даже без доказательств
+     * установки.
+     */
+    public function actionSync(): int
+    {
+        return $this->printReport($this->manager->sync((bool)$this->adoptAll));
     }
 
     public function actionRecompile(): int

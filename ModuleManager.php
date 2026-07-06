@@ -15,6 +15,7 @@ use modules\modman\compiler\ConfigCompiler;
 use modules\modman\lifecycle\handler\CheckHandler;
 use modules\modman\lifecycle\handler\InstallHandler;
 use modules\modman\lifecycle\handler\ReconcileHandler;
+use modules\modman\lifecycle\handler\SyncHandler;
 use modules\modman\lifecycle\handler\UninstallHandler;
 use modules\modman\lifecycle\handler\UpdateHandler;
 use modules\modman\lifecycle\OperationReport;
@@ -40,6 +41,7 @@ final class ModuleManager
         private readonly UninstallHandler  $uninstallHandler,
         private readonly UpdateHandler     $updateHandler,
         private readonly ReconcileHandler  $reconcileHandler,
+        private readonly SyncHandler       $syncHandler,
         private readonly ConfigCompiler    $compiler,
     ) {}
 
@@ -80,6 +82,21 @@ final class ModuleManager
     public function reconcile(): OperationReport
     {
         return $this->reconcileHandler->reconcileAll();
+    }
+
+    /**
+     * Пересобрать реестр состояния из фактического состояния системы (каталог + история миграций)
+     * и перекомпилировать артефакты. Восстановление после потери/повреждения `modules-state.php`
+     * без ручной правки и без ручных контрольных сумм.
+     *
+     * @param bool $adoptAll усыновить как installed ВСЕ обнаруженные editable-модули, даже без
+     *                       доказательств установки (крайняя мера восстановления).
+     */
+    public function sync(bool $adoptAll = false): OperationReport
+    {
+        $report = $this->syncHandler->sync($adoptAll);
+        $this->catalog->refresh();
+        return $report;
     }
 
     /**

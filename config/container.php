@@ -21,6 +21,7 @@ use modules\modman\events\ModuleLifecycleDispatcher;
 use modules\modman\lifecycle\handler\CheckHandler;
 use modules\modman\lifecycle\handler\InstallHandler;
 use modules\modman\lifecycle\handler\ReconcileHandler;
+use modules\modman\lifecycle\handler\SyncHandler;
 use modules\modman\lifecycle\handler\UninstallHandler;
 use modules\modman\lifecycle\handler\UpdateHandler;
 use modules\modman\lifecycle\LifecycleExecutor;
@@ -182,6 +183,14 @@ return function (Container $container): void {
             $c->get(ConfigCompiler::class),
             $c->get(LifecycleLock::class),
         ));
+    $container->setSingleton(SyncHandler::class, static fn(Container $c): SyncHandler
+        => new SyncHandler(
+            $c->get(PackageCatalog::class),
+            $c->get(ModuleRegistry::class),
+            $c->get(MigrationOwnershipRepository::class),
+            $c->get(ConfigCompiler::class),
+            $c->get(LifecycleLock::class),
+        ));
 
     // --- Фасад -------------------------------------------------------------------------------
     $container->setSingleton(ModuleManager::class, static fn(Container $c): ModuleManager
@@ -193,6 +202,7 @@ return function (Container $container): void {
             $c->get(UninstallHandler::class),
             $c->get(UpdateHandler::class),
             $c->get(ReconcileHandler::class),
+            $c->get(SyncHandler::class),
             $c->get(ConfigCompiler::class),
         ));
 };

@@ -18,4 +18,5 @@ enum OperationType: string
     case Uninstall = 'uninstall';
     case Update = 'update';
     case Reconcile = 'reconcile';
+    case Sync = 'sync';
 }
