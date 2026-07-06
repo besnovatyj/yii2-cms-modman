@@ -15,19 +15,23 @@
 ## Карта каталога
 
 ```
-contract/     capability-интерфейсы модуля (DeclaresModule, Provides*) — вместо method_exists
 catalog/      ModuleManifest + value-объекты, discovery (Filesystem/Composer), ManifestFactory,
               PackageCatalog, InvalidModule, маркер CmsMarker/CmsKind (extra.bescms)
 registry/     ModuleStatus, Version, ModuleState, ModuleRegistry (атомарный lock-файл — источник истины)
 compiler/     AtomicWriter, ConfigCompiler (чистая компиляция), MenuCompiler, ArtifactPaths
 deps/         SemverConstraint, DependencyGraph, DependencyResolver (прямые + обратные зависимости)
 migration/    MigrationOwnershipRepository, ModuleMigrationRunner (учёт владения, pending-only update)
-lifecycle/    Planner/Executor/Steps/Handlers (mutex, commit-at-end, компенсация, reconcile)
+lifecycle/    Planner/Executor/Steps/Handlers (mutex, commit-at-end, компенсация, reconcile, sync)
 events/       ModuleLifecycleDispatcher (app-level шина межмодульных интеграций)
 controllers/  backend/ModulesController (веб-интерфейс)
 commands/     ModulesController + MenuController (консольные драйверы поверх того же фасада)
 ModuleManager.php  фасад — единый публичный API для драйверов
 ```
+
+> **Контракты модуля вынесены в пакеты.** Capability-интерфейсы (`DeclaresModule`, `Provides*`)
+> живут в пакете `besnovatyj/yii2-cms-contracts` (`Besnovatyj\Contracts\module\*`), а рантайм-базовый
+> класс — в `besnovatyj/yii2-cms-kernel` (`Besnovatyj\Kernel\module\CmsModule`). Менеджер и модули
+> используют версии из пакетов; локального каталога `contract/` больше нет.
 
 ## Подключение в приложение
 
@@ -60,7 +64,7 @@ ModuleManager.php  фасад — единый публичный API для д�
 
 **Веб:** `/modman/backend/modules/index` — список модулей/пакетов (фильтры по статусу/обновлениям,
 сортировка, пагинация), «План» (dry-run), установка, обновление, удаление, «Сверка» (reconcile),
-«Пересобрать конфиг», «Пересобрать меню».
+«Пересобрать конфиг», «Пересобрать меню». (`sync` — пока только в консоли, см. ниже.)
 
 **Консоль:**
 
@@ -71,12 +75,30 @@ php yii modman/modules/install <moduleId>
 php yii modman/modules/update <moduleId>
 php yii modman/modules/uninstall <moduleId>
 php yii modman/modules/reconcile
+php yii modman/modules/sync [--adoptAll]   # пересобрать реестр из реальности (см. ниже)
 php yii modman/modules/recompile
 php yii modman/menu/info       # диагностика локаций меню (вкл/выкл, файл, существование, число пунктов)
 php yii modman/menu/rebuild    # перекомпилировать только артефакты меню
 ```
 
 (Для консоли модуль также должен быть в `modules` console-приложения.)
+
+### `sync` — восстановление реестра из фактического состояния
+
+Реестр `modules-state.php` — единственный источник истины, но если его файл затёрли/побили, штатного
+способа восстановить его «из реальности» раньше не было (`reconcile` чинит только транзиентные записи,
+уже присутствующие в реестре). `sync` закрывает эту точку отказа — **без ручной правки файла и без
+ручных контрольных сумм**:
+
+- набор модулей берётся из discovery (composer + скан `packages/besnovatyj`);
+- применённые миграции — из БД-истории владения (`MigrationOwnershipRepository`);
+- `manifestChecksum` — пересчитывается детерминированно фабрикой манифестов.
+
+«Установлен по факту» = уже `installed` в реестре, **или** за модулем числятся применённые миграции в
+БД, **или** передан `--adoptAll`. Иначе модуль пропускается (используйте `install`). После пересборки
+запускается `recompile`. Осиротевшие записи реестра (пакет исчез из каталога) не удаляются — только
+сообщаются. `--adoptAll` (`-a`) — крайняя мера: усыновить как `installed` все обнаруженные
+editable-модули для голого восстановления.
 
 ## Маркер пакета CMS (`extra.bescms`)
 
@@ -101,14 +123,14 @@ php yii modman/menu/rebuild    # перекомпилировать только
 
 ## Контракт модуля
 
-Модуль наследует тонкий рантайм-базовый класс `common\components\module\CmsModule` (раскладка
+Модуль наследует тонкий рантайм-базовый класс `Besnovatyj\Kernel\module\CmsModule` (раскладка
 controllerNamespace по контексту приложения, layout из активной темы, хук DI `/config/container.php`) и
 реализует `DeclaresModule` плюс нужные `Provides*` (статические методы — discovery не инстанцирует класс):
 
 ```php
-use common\components\module\CmsModule;
-use modules\modman\contract\DeclaresModule;
-use modules\modman\contract\ProvidesMigrations;
+use Besnovatyj\Kernel\module\CmsModule;
+use Besnovatyj\Contracts\module\DeclaresModule;
+use Besnovatyj\Contracts\module\ProvidesMigrations;
 
 final class Module extends CmsModule implements DeclaresModule, ProvidesMigrations
 {
@@ -132,9 +154,9 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 }
 ```
 
-> **Размещение контрактов.** Сейчас они в `modman/contract/` (для целостности репозитория и diff).
-> Архитектурно правильнее «повысить» их в `common\components\module\`, чтобы модули не зависели от
-> менеджера — это оставшийся шаг (см. «Статус» ниже).
+> **Размещение контрактов.** Контракты и базовый класс вынесены в отдельные пакеты
+> (`besnovatyj/yii2-cms-contracts` и `besnovatyj/yii2-cms-kernel`), поэтому модули не зависят от
+> менеджера.
 
 > **Сам менеджер — обычный модуль.** `modman/Module` реализует тот же `DeclaresModule` с
 > `isEditable() === false`: он виден в общем списке как «системный» (с версией, без кнопок
@@ -152,6 +174,6 @@ docker compose exec php sh -c 'find /home/node/app/modules/modman -name "*.php" 
 Cutover на канонические пути выполнен; модуль на стадии тестирования. Прежний патч-modman сохранён как
 `app/modules/modman_b` (образец, вне автозагрузки). Остаётся:
 
-1. Обкатать `install`/`uninstall`/`update`/`reconcile` на реальных модулях (Фаза 11 в [plan.md](./plan.md)).
-2. «Повысить» контракты `contract/*` в `common\components\module\`.
+1. Обкатать `install`/`uninstall`/`update`/`reconcile`/`sync` на реальных модулях (Фаза 11 в [plan.md](./plan.md)).
+2. Пробросить `sync` в веб-контроллёр (пока только консоль).
 3. После доверия — удалить `modman_b`.

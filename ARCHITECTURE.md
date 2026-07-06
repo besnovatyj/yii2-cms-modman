@@ -33,7 +33,7 @@
             ┌─────────────────────────────────────────────────────────────┐
             │                        lifecycle/                             │
             │  Planner → LifecyclePlan        Executor (mutex, commit-end)  │
-            │  handler/{Check,Install,Uninstall,Update,Reconcile}           │
+            │  handler/{Check,Install,Uninstall,Update,Reconcile,Sync}      │
             │  step/{RunMigrations,CreateDirs,Recompile,CommitRegistry,…}   │
             └───┬──────────────┬─────────────┬──────────────┬──────────────┘
                 │              │             │              │
@@ -53,7 +53,7 @@
                   events/  ◄── lifecycle публикует фазы (межмодульные интеграции)
 ```
 
-## 3. Контракты модуля (`contract/`)
+## 3. Контракты модуля (`Besnovatyj\Contracts\module\*`)
 
 Вместо россыпи опциональных статических методов и `method_exists()` — набор **capability-интерфейсов**.
 Модуль реализует ровно то, что предоставляет; менеджер проверяет через `instanceof`. Это статически
@@ -71,12 +71,13 @@
 
 > **Рантайм vs метаданные.** Контракты — это метаданные (читаются менеджером статически). Рантайм-поведение
 > экземпляра (раскладка `controllerNamespace`, layout из темы, DI способа A) живёт в базовом классе
-> `common\components\module\CmsModule`, который модуль наследует параллельно реализации контрактов. Это
+> `Besnovatyj\Kernel\module\CmsModule`, который модуль наследует параллельно реализации контрактов. Это
 > разные оси (наследование vs интерфейсы), без конфликта.
 
-> **Размещение.** Сейчас контракты лежат внутри `modman/contract/` для целостности репозитория и удобства
-> diff. Архитектурно правильное место — `common\components\module\` (фреймворк-уровень), чтобы модули не
-> зависели от менеджера. Это «повышение» — оставшийся шаг.
+> **Размещение.** Контракты вынесены в пакет `besnovatyj/yii2-cms-contracts`
+> (`Besnovatyj\Contracts\module\*`), а базовый класс — в `besnovatyj/yii2-cms-kernel`
+> (`Besnovatyj\Kernel\module\CmsModule`): модули зависят от пакетов, а не от менеджера. Прежнего
+> локального `modman/contract/` больше нет.
 
 ## 4. Каталог и discovery (`catalog/`)
 
@@ -97,11 +98,13 @@
 
 - `ModuleStatus` (enum): `discovered`, `installing`, `installed`, `updating`, `removing`, `failed`.
 - `Version` — value object семантической версии.
-- `ModuleState` (readonly): id, package, installedVersion, status, operationId, appliedMigrations,
-  manifestChecksum, installedAt.
+- `ModuleState` (readonly): id, package, moduleClass, version, status, operationId, appliedMigrations,
+  manifestChecksum, installedAt, updatedAt. Все поля **машинно-восстановимы** (см. §9, `sync`):
+  `manifestChecksum` пересчитывается фабрикой манифестов, `appliedMigrations` — из БД-истории владения.
 - `ModuleRegistry` — единственный изменяемый источник истины. Читается до создания Yii-приложения
   (поэтому файл, не БД). Запись атомарна (`AtomicWriter`). Status-машина разводит «прописан в конфиге»
   и «реально применён» — то, что в патч-modman было слито в `isInstalled() === hasModule()`.
+  Файл никогда не редактируется руками; при его потере восстанавливается командой `sync` (§9).
 
 ## 6. Компилятор (`compiler/`)
 
@@ -142,7 +145,15 @@
   (`@runtime/modman_mutex`), с принципом **commit-at-end** (запись реестра — последний шаг) и
   компенсацией только необратимых вне-реестровых эффектов (миграции, директории). После recompile
   обновляет карту представлений темы (`Theme::renewPathMap`) и выгружает весь `OperationReport` в лог.
-- Хендлеры: `CheckHandler`, `InstallHandler`, `UninstallHandler`, `UpdateHandler`, `ReconcileHandler`.
+- Хендлеры: `CheckHandler`, `InstallHandler`, `UninstallHandler`, `UpdateHandler`, `ReconcileHandler`,
+  `SyncHandler`.
+- `SyncHandler` — **пересборка реестра из фактического состояния** (восстановление после потери/порчи
+  lock-файла). В отличие от `ReconcileHandler` (чинит только транзиентные записи, уже присутствующие в
+  реестре), `sync` реконструирует записи с нуля: набор модулей — из discovery, `appliedMigrations` — из
+  `MigrationOwnershipRepository`, `manifestChecksum` — пересчётом фабрикой манифестов. Критерий «установлен
+  по факту»: активная запись в реестре **или** применённые миграции в БД **или** флаг `--adoptAll`. Работает
+  под тем же mutex и завершается `recompile`. Это закрывает единственную точку отказа единого источника
+  истины — реестр становится авто-восстановимым, без ручной правки и ручных контрольных сумм.
 - `OperationReport` — DTO результата (что сделано, предупреждения, счётчики); рендерится драйвером.
   Сервисный слой не знает про `session flash` (исправление SRP-проблемы патч-modman).
 
@@ -159,8 +170,9 @@ Cutover выполнен: менеджер пишет в **каноническ�
 напрямую (без суффиксов и аддитивных слияний). Прежний патч-modman сохранён как `app/modules/modman_b`
 (нерабочий образец для сверки, вне автозагрузки и discovery — у него нет маркера `extra.bescms`).
 
-Оставшиеся шаги — обкатка операций на реальных модулях, «повышение» контрактов в `common`, затем
-удаление `modman_b` (см. «Статус» в [README.md](./README.md)).
+Контракты и базовый класс вынесены в пакеты (`yii2-cms-contracts`, `yii2-cms-kernel`); локальный
+`contract/` удалён. Оставшиеся шаги — обкатка операций (включая `sync`) на реальных модулях, проброс
+`sync` в веб-контроллёр и затем удаление `modman_b` (см. «Статус» в [README.md](./README.md)).
 
 ## 12. Карта «патч-modman (modman_b) → modman»
 
@@ -171,6 +183,7 @@ Cutover выполнен: менеджер пишет в **каноническ�
 | статические `getConfig/...` | `ModuleManifest` (value object) |
 | инкрементальная правка 4 конфигов + `_backup` | `ConfigCompiler` + `AtomicWriter` (compile, не patch) |
 | `InstallationLog` (журнал-компенсация, удаляется) | реестр со статусами + commit-at-end + `ReconcileHandler` |
+| потеря состояния = ручная правка конфигов | `SyncHandler` — авто-восстановление реестра из discovery + БД-истории |
 | `isInstalled() === hasModule()` | `ModuleStatus` (разведены состояния) |
 | откат «всех миграций в каталоге» | `MigrationOwnershipRepository` (владение) |
 | нет update | `UpdateHandler` (pending-only миграции) |
