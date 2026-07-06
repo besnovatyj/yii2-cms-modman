@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 use Besnovatyj\Backend\Widgets\pagination\LinkPager;
 use modules\modman\forms\backend\search\ModuleSearch;
+use modules\modman\widgets\OperationReportModal;
 use yii\helpers\Html;
 
 $sort = $dataProvider->getSort();
@@ -51,6 +52,8 @@ $postButton = static function (string $action, string $moduleId, string $label, 
     return $form;
 };
 ?>
+
+<?= OperationReportModal::widget() ?>
 
 <div class="modman-index">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">

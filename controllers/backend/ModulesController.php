@@ -10,7 +10,9 @@ namespace modules\modman\controllers\backend;
 
 use modules\modman\forms\backend\search\ModuleSearch;
 use modules\modman\lifecycle\OperationReport;
+use modules\modman\lifecycle\OperationType;
 use modules\modman\ModuleManager;
+use modules\modman\widgets\OperationReportModal;
 use Throwable;
 use Yii;
 use yii\filters\VerbFilter;
@@ -104,31 +106,13 @@ final class ModulesController extends Controller
 
     public function actionRecompile(): Response
     {
-        try {
-            $artifacts = $this->manager->recompile();
-            Yii::$app->session->addFlash('success', 'Конфигурация перекомпилирована из реестра.');
-            foreach ($artifacts->warnings as $warning) {
-                Yii::$app->session->addFlash('warning', $warning);
-            }
-        } catch (Throwable $e) {
-            Yii::$app->errorHandler->logException($e);
-            Yii::$app->session->addFlash('error', 'Ошибка перекомпиляции: ' . $e->getMessage());
-        }
+        $this->flashArtifacts('Пересборка конфигурации', 'Конфигурация перекомпилирована из реестра.', 'Ошибка перекомпиляции: ', fn() => $this->manager->recompile()->warnings);
         return $this->redirect(['index']);
     }
 
     public function actionRebuildMenus(): Response
     {
-        try {
-            $artifacts = $this->manager->recompileMenus();
-            Yii::$app->session->addFlash('success', 'Меню перекомпилировано из реестра.');
-            foreach ($artifacts->warnings as $warning) {
-                Yii::$app->session->addFlash('warning', $warning);
-            }
-        } catch (Throwable $e) {
-            Yii::$app->errorHandler->logException($e);
-            Yii::$app->session->addFlash('error', 'Ошибка пересборки меню: ' . $e->getMessage());
-        }
+        $this->flashArtifacts('Пересборка меню', 'Меню перекомпилировано из реестра.', 'Ошибка пересборки меню: ', fn() => $this->manager->recompileMenus()->warnings);
         return $this->redirect(['index']);
     }
 
@@ -150,23 +134,80 @@ final class ModulesController extends Controller
     }
 
     /**
-     * Перекладывает отчёт операции во flash-сообщения (UI-агностичный сервис → представление).
+     * Перекладывает отчёт операции в отчёт-модалку (UI-агностичный сервис → представление).
+     *
+     * Раньше отчёт разворачивался в поток flash-алертов, которые из-за объёма шагов уезжали за
+     * границу экрана. Теперь сообщения группируются и показываются в модальном окне
+     * {@see OperationReportModal}.
      */
     private function flashReport(OperationReport $report): void
     {
-        $session = Yii::$app->session;
+        $groups = [];
+        if ($report->steps() !== []) {
+            $groups[] = ['label' => 'Шаги', 'variant' => 'secondary', 'items' => $report->steps()];
+        }
+        if ($report->infos() !== []) {
+            $groups[] = ['label' => 'Информация', 'variant' => $report->isSuccessful() ? 'success' : 'info', 'items' => $report->infos()];
+        }
+        if ($report->warnings() !== []) {
+            $groups[] = ['label' => 'Предупреждения', 'variant' => 'warning', 'items' => $report->warnings()];
+        }
+        if ($report->errors() !== []) {
+            $groups[] = ['label' => 'Ошибки', 'variant' => 'danger', 'items' => $report->errors()];
+        }
 
-        foreach ($report->steps() as $message) {
-            $session->addFlash('info', '• ' . $message);
+        $this->flashModal($this->operationTitle($report->type, $report->moduleId), $report->isSuccessful(), $groups);
+    }
+
+    /**
+     * Выполняет операцию пересборки артефактов и кладёт её результат в отчёт-модалку.
+     *
+     * @param callable(): string[] $run операция, возвращающая список предупреждений артефактов
+     */
+    private function flashArtifacts(string $title, string $successMessage, string $errorPrefix, callable $run): void
+    {
+        try {
+            $warnings = $run();
+            $groups = [['label' => 'Результат', 'variant' => 'success', 'items' => [$successMessage]]];
+            if ($warnings !== []) {
+                $groups[] = ['label' => 'Предупреждения', 'variant' => 'warning', 'items' => $warnings];
+            }
+            $this->flashModal($title, true, $groups);
+        } catch (Throwable $e) {
+            Yii::$app->errorHandler->logException($e);
+            $this->flashModal($title, false, [
+                ['label' => 'Ошибки', 'variant' => 'danger', 'items' => [$errorPrefix . $e->getMessage()]],
+            ]);
         }
-        foreach ($report->infos() as $message) {
-            $session->addFlash($report->isSuccessful() ? 'success' : 'info', $message);
-        }
-        foreach ($report->warnings() as $message) {
-            $session->addFlash('warning', $message);
-        }
-        foreach ($report->errors() as $message) {
-            $session->addFlash('error', $message);
-        }
+    }
+
+    /**
+     * Кладёт структурированный отчёт во flash, который читает {@see OperationReportModal}.
+     *
+     * @param array<int, array{label: string, variant: string, items: string[]}> $groups
+     */
+    private function flashModal(string $title, bool $ok, array $groups): void
+    {
+        Yii::$app->session->setFlash(OperationReportModal::FLASH_KEY, [
+            'title' => $title,
+            'ok' => $ok,
+            'groups' => $groups,
+        ]);
+    }
+
+    /**
+     * Человекочитаемый заголовок модалки по типу операции и id модуля.
+     */
+    private function operationTitle(OperationType $type, string $moduleId): string
+    {
+        $label = match ($type) {
+            OperationType::Install => 'Установка',
+            OperationType::Uninstall => 'Удаление',
+            OperationType::Update => 'Обновление',
+            OperationType::Reconcile => 'Сверка состояния',
+            OperationType::Check => 'Проверка',
+        };
+
+        return $moduleId !== '' ? "{$label}: {$moduleId}" : $label;
     }
 }
