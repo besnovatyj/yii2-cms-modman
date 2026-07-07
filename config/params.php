@@ -27,6 +27,10 @@ return [
         'bootstrap' => '@config-dyn-gen/bootstrapComponentsAndModulesConfigFile.php',
         'components' => '@config-dyn-gen/componentsConfigFile.php',
         'logChannels' => '@config-dyn-gen/logChannelsConfigFile.php',
+        // Реестр опций (агрегат Module::options() всех модулей) для модуля конфигурации
+        // `besnovatyj/yii2-cms-config`. Формат и семантику опций знает только он — он полноправный
+        // хозяин этой области; modman лишь собирает данные. Сейчас config читает опции рефлексией
+        // (ProvidesOptions) и этот артефакт не потребляет — файл держим для него на будущее.
         'options' => '@config-dyn-gen/moduleOptions.php',
         // Тема-НЕзависимый манифест источников представлений (см. common params 'moduleViewSourcesFile').
         'viewSources' => '@config-dyn-gen/moduleViewSources.php',
