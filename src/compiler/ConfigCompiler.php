@@ -136,7 +136,8 @@ final class ConfigCompiler
     public function persist(CompiledArtifacts $artifacts): void
     {
         $this->writer->writeArray($this->paths->modulesConfig, $artifacts->modules);
-        $this->writer->writeArray($this->paths->bootstrapConfig, $artifacts->bootstrap);
+        // bootstrap-артефакт больше не пишем: L2-bootstrap (registry-gated) реализуется через config-plugin
+        // (merge-plan modman) — по решению владельца. Лог-каналы, наоборот, ОСТАЮТСЯ через компиляцию ниже.
         $this->writer->writeArray($this->paths->componentsConfig, $artifacts->components);
         $this->writer->writeArray($this->paths->logChannelsConfig, $artifacts->logChannels);
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
