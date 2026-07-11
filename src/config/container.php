@@ -69,6 +69,7 @@ return function (Container $container): void {
             logChannelsConfig: Yii::getAlias($params['artifacts']['logChannels']),
             optionsConfig: Yii::getAlias($params['artifacts']['options']),
             viewSourcesConfig: Yii::getAlias($params['artifacts']['viewSources']),
+            appConfigConfig: Yii::getAlias($params['artifacts']['appConfig']),
             menuLocationFiles: $menuFiles,
         );
     });

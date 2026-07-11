@@ -13,6 +13,7 @@ use Besnovatyj\Modman\catalog\exception\ManifestException;
 use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
 use Besnovatyj\Contracts\module\DeclaresModule;
 use Besnovatyj\Contracts\module\ProvidesAdminMenu;
+use Besnovatyj\Contracts\module\ProvidesAppConfig;
 use Besnovatyj\Contracts\module\ProvidesBootstrap;
 use Besnovatyj\Contracts\module\ProvidesComponents;
 use Besnovatyj\Contracts\module\ProvidesDependencies;
@@ -32,6 +33,25 @@ use Yii;
  */
 final class ManifestFactory
 {
+    /**
+     * Политика пер-аппликационного вклада (контракт {@see ProvidesAppConfig}): allowlist путей-ключей,
+     * которые модуль вправе класть в конфиг приложения. Всё, чего здесь нет, вырезается.
+     *
+     * Значение:
+     *  - `true` — ключ разрешён целиком (любой подмассив);
+     *  - массив `['подключ' => true, ...]` — разрешены ТОЛЬКО перечисленные подключи, остальные режутся.
+     *
+     * БЕЗОПАСНОСТЬ: `as access` открыт лишь на `allowActions`. Класс гейта (`as access.class`), его
+     * `rules`, `denyCallback` и прочее модулю НЕДОСТУПНЫ — гейт принадлежит ядру, модуль может только
+     * ДОПОЛНИТЬ whitelist, но не подменить/снять замок. Это единая точка, где расширяются полномочия
+     * модулей на вмешательство в конфиг приложения.
+     */
+    private const array APP_CONFIG_POLICY = [
+        'components' => true,
+        'params' => true,
+        'as access' => ['allowActions' => true],
+    ];
+
     /**
      * Собирает манифест валидного CMS-модуля нового контракта.
      *
@@ -96,6 +116,7 @@ final class ManifestFactory
             options: $this->implementsContract($class, ProvidesOptions::class) ? $class::options() : [],
             logChannels: $this->implementsContract($class, ProvidesLogChannels::class) ? $class::logChannels() : [],
             directories: $this->implementsContract($class, ProvidesDirectories::class) ? $this->buildDirectories($class::directories()) : [],
+            appConfig: $this->implementsContract($class, ProvidesAppConfig::class) ? $this->sanitizeAppConfig($class::appConfig()) : [],
             migrationPath: $this->implementsContract($class, ProvidesMigrations::class) ? Yii::getAlias($class::migrationPath()) : null,
             migrationNamespace: $this->implementsContract($class, ProvidesMigrations::class) ? $class::migrationNamespace() : null,
         );
@@ -118,6 +139,42 @@ final class ManifestFactory
     private function implementsContract(string $class, string $interface): bool
     {
         return isset(class_implements($class)[$interface]);
+    }
+
+    /**
+     * Пропускает пер-аппликационный вклад модуля через allowlist {@see APP_CONFIG_POLICY}: оставляет
+     * только разрешённые ключи (и разрешённые подключи), остальное молча вырезает. Так модуль физически
+     * не может подсунуть в конфиг приложения `as access.class` и т.п. — это гарантия на этапе компиляции,
+     * а не договорённость.
+     *
+     * @param array<string, array> $appConfig appId => сырой вклад из {@see ProvidesAppConfig::appConfig()}
+     * @return array<string, array> очищенный вклад (пустые приложения отброшены)
+     */
+    private function sanitizeAppConfig(array $appConfig): array
+    {
+        $clean = [];
+        foreach ($appConfig as $appId => $contribution) {
+            if (!is_array($contribution)) {
+                continue;
+            }
+            $bucket = [];
+            foreach ($contribution as $key => $value) {
+                $rule = self::APP_CONFIG_POLICY[$key] ?? null;
+                if ($rule === true) {
+                    $bucket[$key] = $value;
+                } elseif (is_array($rule) && is_array($value)) {
+                    $allowedSub = array_intersect_key($value, $rule);
+                    if ($allowedSub !== []) {
+                        $bucket[$key] = $allowedSub;
+                    }
+                }
+                // $rule === null → ключ не в allowlist → вырезаем.
+            }
+            if ($bucket !== []) {
+                $clean[(string)$appId] = $bucket;
+            }
+        }
+        return $clean;
     }
 
     /**
@@ -162,6 +219,7 @@ final class ManifestFactory
             'components' => array_keys($contributions->components),
             'bootstrap' => $contributions->bootstrap,
             'logChannels' => array_keys($contributions->logChannels),
+            'appConfig' => $contributions->appConfig,
             'migrationPath' => $contributions->migrationPath,
             'migrationNamespace' => $contributions->migrationNamespace,
             'directories' => array_map(

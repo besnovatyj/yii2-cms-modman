@@ -34,6 +34,9 @@ return [
         'options' => '@config-dyn-gen/moduleOptions.php',
         // Тема-НЕзависимый манифест источников представлений (см. common params 'moduleViewSourcesFile').
         'viewSources' => '@config-dyn-gen/moduleViewSources.php',
+        // Пер-аппликационные вклады модулей (ProvidesAppConfig): appId => частичное дерево конфига.
+        // Каждый main.php приложения подмешивает свой ключ через ArrayHelper::merge.
+        'appConfig' => '@config-dyn-gen/appConfigFile.php',
     ],
 
     // Локации меню (location => файл/включённость). Совпадает по смыслу с конфигом старого modman.

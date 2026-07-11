@@ -12,6 +12,7 @@ use Besnovatyj\Contracts\theme\ViewSourcesManifest;
 use Besnovatyj\Modman\catalog\ModuleManifest;
 use Besnovatyj\Modman\catalog\PackageCatalog;
 use Besnovatyj\Modman\registry\ModuleRegistry;
+use yii\helpers\ArrayHelper;
 
 /**
  * Сердце архитектурного закона: производные конфиги собираются ЦЕЛИКОМ из (реестр × манифесты).
@@ -47,6 +48,8 @@ final class ConfigCompiler
         $menuContributions = [];
         // Тема-НЕзависимый манифест источников представлений: корневой ключ приложения + модули.
         $viewSources = [ViewSourcesManifest::APP_VIEWS_KEY => ''];
+        // Пер-аппликационные вклады: appId => частичное дерево конфига (merge нескольких модулей).
+        $appConfig = [];
         $warnings = [];
         $compiled = [];
 
@@ -55,7 +58,7 @@ final class ConfigCompiler
         // — модуль «исчезал» бы из приложения после любой install/uninstall.
         foreach ($this->catalog->manifests() as $id => $manifest) {
             if (!$manifest->editable) {
-                $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $warnings);
+                $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $appConfig, $warnings);
                 $compiled[$id] = true;
             }
         }
@@ -72,7 +75,7 @@ final class ConfigCompiler
                 continue;
             }
 
-            $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $warnings);
+            $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $appConfig, $warnings);
             $compiled[$id] = true;
         }
 
@@ -84,6 +87,7 @@ final class ConfigCompiler
         ksort($logChannels);
         ksort($options);
         ksort($viewSources);
+        ksort($appConfig);
         sort($bootstrap);
 
         return new CompiledArtifacts(
@@ -94,6 +98,7 @@ final class ConfigCompiler
             options: $options,
             menusByLocation: $menusByLocation,
             viewSources: $viewSources,
+            appConfig: $appConfig,
             warnings: $warnings,
         );
     }
@@ -132,6 +137,7 @@ final class ConfigCompiler
         $this->writer->writeArray($this->paths->logChannelsConfig, $artifacts->logChannels);
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
         $this->writer->writeArray($this->paths->viewSourcesConfig, $artifacts->viewSources);
+        $this->writer->writeArray($this->paths->appConfigConfig, $artifacts->appConfig);
 
         foreach ($this->paths->menuLocationFiles as $location => $file) {
             $this->writer->writeArray($file, $artifacts->menusByLocation[$location] ?? []);
@@ -149,6 +155,7 @@ final class ConfigCompiler
      * @param array<string, array>  $options
      * @param array<int, array>     $menuContributions
      * @param array<string, string> $viewSources
+     * @param array<string, array>  $appConfig
      * @param string[]              $warnings
      */
     private function addManifest(
@@ -160,6 +167,7 @@ final class ConfigCompiler
         array &$options,
         array &$menuContributions,
         array &$viewSources,
+        array &$appConfig,
         array &$warnings,
     ): void {
         $id = $manifest->id;
@@ -186,6 +194,15 @@ final class ConfigCompiler
 
         if ($manifest->contributions->hasAdminMenu()) {
             $menuContributions[] = $manifest->contributions->adminMenu;
+        }
+
+        // Пер-аппликационный вклад: частичные деревья конфига мёржатся по appId (deep merge —
+        // allowActions нескольких модулей конкатенируются, компоненты дополняются). Вклад уже
+        // отфильтрован политикой в ManifestFactory, поэтому as access.class сюда попасть не может.
+        foreach ($manifest->contributions->appConfig as $appId => $contribution) {
+            $appConfig[$appId] = isset($appConfig[$appId])
+                ? ArrayHelper::merge($appConfig[$appId], $contribution)
+                : $contribution;
         }
     }
 

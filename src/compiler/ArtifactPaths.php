@@ -23,6 +23,7 @@ final readonly class ArtifactPaths
         public string $logChannelsConfig,
         public string $optionsConfig,
         public string $viewSourcesConfig,
+        public string $appConfigConfig,
         public array  $menuLocationFiles,
     ) {}
 
@@ -33,7 +34,7 @@ final readonly class ArtifactPaths
     public function all(): array
     {
         return array_merge(
-            [$this->modulesConfig, $this->bootstrapConfig, $this->componentsConfig, $this->logChannelsConfig, $this->optionsConfig, $this->viewSourcesConfig],
+            [$this->modulesConfig, $this->bootstrapConfig, $this->componentsConfig, $this->logChannelsConfig, $this->optionsConfig, $this->viewSourcesConfig, $this->appConfigConfig],
             array_values($this->menuLocationFiles),
         );
     }
