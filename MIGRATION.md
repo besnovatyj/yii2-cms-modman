@@ -44,9 +44,8 @@ modman — **kernel-tier**: ядро зависит от него всегда (
    - веб-роут: `/modman/backend/modules/index` → `/Modman/backend/modules/index`
      (проверить пункт меню/ссылки, если где-то в ядре зашит старый путь);
    - консоль: `php yii modman/...` → `php yii Modman/...`;
-   - холодная регистрация модуля (если прописана вручную до первой компиляции):
-     `'Modman' => ['class' => \Besnovatyj\Modman\Module::class]`;
-   - для консоли модуль должен быть в `modules` console-приложения под ключом `Modman`.
+   - вручную регистрировать модуль в `modules` НЕ нужно: `Bootstrap` саморегистрирует
+     `Modman` (см. шаг 6 и «Холодный старт» в README) — работает и в web, и в console.
 
 5. **Discovery / реестр.** modman находит сам себя источником `FilesystemModuleSource`
    (скан `@root/packages/besnovatyj`, см. `src/config/params.php`) либо, после переезда в
@@ -54,11 +53,15 @@ modman — **kernel-tier**: ядро зависит от него всегда (
    будет: старый модуль заархивирован в `.zip` (не директория). Алиас/скан `@modules`
    остаётся для локальных проектных модулей.
 
-6. **Пересборка артефактов.** modman — системный модуль (`editable=false`), компилируется
-   в `modulesConfigFile.php` всегда. После правок:
+6. **Пересборка артефактов (разрыв chicken-and-egg).** Старый `modulesConfigFile.php`
+   ещё содержит мёртвый `'modman' => modules\modman\Module`, а руками артефакт править
+   нельзя. Ничего страшного: `Bootstrap` саморегистрирует `Modman` независимо от артефакта
+   (мёртвый `modman` — lazy, не инстанцируется, пока по нему не пойти), поэтому консольная
+   команда доступна сразу. Пересобрать артефакты из каталога:
    ```
    php yii Modman/modules/recompile
    ```
+   После этого `modulesConfigFile.php` содержит уже `Modman`, старый `modman` исчезает.
 
 ## Проверка
 

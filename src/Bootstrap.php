@@ -18,14 +18,43 @@ use yii\base\BootstrapInterface;
  *
  * Регистрирует DI-проводку (в т.ч. синглтон {@see \Besnovatyj\Modman\events\ModuleLifecycleDispatcher})
  * ДО инициализации остальных модулей — чтобы другие модули могли подписаться на фазы lifecycle в
- * своих Bootstrap. Должен быть добавлен в app bootstrap (см. README).
+ * своих Bootstrap. Плюс саморегистрирует сам модуль {@see registerModule()} и канал лога
+ * {@see registerLogChannels()} — чтобы менеджер работал независимо от компилируемых им же артефактов.
+ * Должен быть добавлен в app bootstrap (см. README).
  */
 final class Bootstrap implements BootstrapInterface
 {
     public function bootstrap($app): void
     {
         (require __DIR__ . '/config/container.php')(Yii::$container);
+        $this->registerModule($app);
         $this->registerLogChannels($app);
+    }
+
+    /**
+     * Саморегистрация модуля менеджера в приложении — из bootstrap, а НЕ из компилируемого
+     * артефакта `modulesConfigFile.php`.
+     *
+     * Это разрывает chicken-and-egg: менеджер компилирует артефакт модулей, поэтому не имеет права
+     * зависеть от него, чтобы вообще запуститься. Иначе пустой/устаревший артефакт (свежая установка,
+     * переезд, смена id/namespace) блокирует единственный инструмент, которым его можно пересобрать —
+     * а руками артефакт править нельзя (закон compile-not-patch).
+     *
+     * Bootstrap выполняется в конце `Application::init()`, когда `modules` из артефакта уже применены,
+     * поэтому guard {@see Module::hasModule()} делает регистрацию идемпотентной: если артефакт уже
+     * содержит `Modman` — не трогаем; если нет (или там мёртвый старый id) — регистрируем сами. Как
+     * системный модуль (`editable=false`) он всё равно попадёт в артефакт при следующей recompile;
+     * саморегистрация — постоянная страховка, а не разовый костыль.
+     */
+    private function registerModule(Application $app): void
+    {
+        $id = Module::moduleId();
+        if ($app->hasModule($id)) {
+            return;
+        }
+        $config = Module::moduleConfig();
+        $config['class'] = Module::class;
+        $app->setModule($id, $config);
     }
 
     /**
