@@ -38,7 +38,10 @@
       "kind": "module"
     },
     "moduleClass": "Besnovatyj\\Modman\\Module",
-    "moduleId": "Modman"
+    "moduleId": "Modman",
+    "config-plugin": {
+      "admin-menu": "src/config/adminMenu.php"
+    }
   },
   "autoload": {
     "psr-4": {

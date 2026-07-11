@@ -93,6 +93,10 @@ return function (Container $container): void {
     // --- Компилятор --------------------------------------------------------------------------
     $container->setSingleton(MenuCompiler::class, static fn(): MenuCompiler
         => new MenuCompiler(array_keys($params['menuLocations']), $params['menuDefaults']));
+
+    // Рантайм-сборка меню из группы admin-menu (yiisoft/config) — вместо сериализованных menu-*.php.
+    $container->setSingleton(\Besnovatyj\Modman\menu\MenuProvider::class, static fn(Container $c): \Besnovatyj\Modman\menu\MenuProvider
+        => new \Besnovatyj\Modman\menu\MenuProvider($c->get(MenuCompiler::class)));
     $container->setSingleton(ViewSourcesResolver::class, ViewSourcesResolver::class);
 
     // Merge-plan для yiisoft/config: root config-plugin читаем из корневого composer.json приложения.
