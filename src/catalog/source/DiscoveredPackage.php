@@ -6,13 +6,13 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog\source;
+namespace Besnovatyj\Modman\catalog\source;
 
 /**
  * «Сырой» обнаруженный пакет — данные composer.json + путь, без создания каких-либо объектов модуля.
  *
  * Источники {@see ModuleSource} возвращают именно такие DTO. Превращение в типизированный
- * {@see \modules\modman\catalog\ModuleManifest} — задача {@see \modules\modman\catalog\ManifestFactory}.
+ * {@see \Besnovatyj\Modman\catalog\ModuleManifest} — задача {@see \Besnovatyj\Modman\catalog\ManifestFactory}.
  */
 final readonly class DiscoveredPackage
 {
@@ -90,7 +90,7 @@ final readonly class DiscoveredPackage
      * Объявлен ли пакет управляемым модулем (`extra.bescms.kind=module`).
      *
      * Это намерение, а не гарантия валидности: наличие/корректность moduleClass и контракта
-     * проверяет {@see \modules\modman\catalog\ManifestFactory}.
+     * проверяет {@see \Besnovatyj\Modman\catalog\ManifestFactory}.
      */
     public function isModule(): bool
     {

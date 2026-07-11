@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog;
+namespace Besnovatyj\Modman\catalog;
 
 /**
  * CMS-пакет, объявивший себя модулем (`extra.bescms.kind=module`), но непригодный к установке.

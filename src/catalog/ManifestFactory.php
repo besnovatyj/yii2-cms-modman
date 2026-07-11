@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog;
+namespace Besnovatyj\Modman\catalog;
 
 use JsonException;
-use modules\modman\catalog\exception\ManifestException;
-use modules\modman\catalog\source\DiscoveredPackage;
+use Besnovatyj\Modman\catalog\exception\ManifestException;
+use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
 use Besnovatyj\Contracts\module\DeclaresModule;
 use Besnovatyj\Contracts\module\ProvidesAdminMenu;
 use Besnovatyj\Contracts\module\ProvidesBootstrap;
@@ -20,7 +20,7 @@ use Besnovatyj\Contracts\module\ProvidesDirectories;
 use Besnovatyj\Contracts\module\ProvidesLogChannels;
 use Besnovatyj\Contracts\module\ProvidesMigrations;
 use Besnovatyj\Contracts\module\ProvidesOptions;
-use modules\modman\registry\Version;
+use Besnovatyj\Modman\registry\Version;
 use Yii;
 
 /**

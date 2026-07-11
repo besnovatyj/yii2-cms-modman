@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\deps;
+namespace Besnovatyj\Modman\deps;
 
-use modules\modman\deps\exception\CircularDependencyException;
+use Besnovatyj\Modman\deps\exception\CircularDependencyException;
 
 /**
  * Ориентированный граф зависимостей модулей с топологической сортировкой.

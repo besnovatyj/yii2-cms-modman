@@ -39,7 +39,7 @@ ModuleManager.php  фасад — единый публичный API для д�
 и шина событий поднимались рано, до загрузки скомпилированных артефактов:
 
 ```php
-'bootstrap' => ['log', 'queue', \modules\modman\Bootstrap::class],
+'bootstrap' => ['log', 'queue', \Besnovatyj\Modman\Bootstrap::class],
 ```
 
 `Bootstrap` поднимает DI-контейнер менеджера и его канал лога `modman/*`. Это же решает chicken-and-egg:
@@ -57,28 +57,28 @@ ModuleManager.php  фасад — единый публичный API для д�
 до UI не добраться:
 
 ```php
-'modman' => ['class' => \modules\modman\Module::class],
+'Modman' => ['class' => \Besnovatyj\Modman\Module::class],
 ```
 
 ## Использование
 
-**Веб:** `/modman/backend/modules/index` — список модулей/пакетов (фильтры по статусу/обновлениям,
+**Веб:** `/Modman/backend/modules/index` — список модулей/пакетов (фильтры по статусу/обновлениям,
 сортировка, пагинация), «План» (dry-run), установка, обновление, удаление, «Сверка» (reconcile),
 «Пересобрать конфиг», «Пересобрать меню». (`sync` — пока только в консоли, см. ниже.)
 
 **Консоль:**
 
 ```
-php yii modman/modules/list
-php yii modman/modules/check <moduleId>
-php yii modman/modules/install <moduleId>
-php yii modman/modules/update <moduleId>
-php yii modman/modules/uninstall <moduleId>
-php yii modman/modules/reconcile
-php yii modman/modules/sync [--adoptAll]   # пересобрать реестр из реальности (см. ниже)
-php yii modman/modules/recompile
-php yii modman/menu/info       # диагностика локаций меню (вкл/выкл, файл, существование, число пунктов)
-php yii modman/menu/rebuild    # перекомпилировать только артефакты меню
+php yii Modman/modules/list
+php yii Modman/modules/check <moduleId>
+php yii Modman/modules/install <moduleId>
+php yii Modman/modules/update <moduleId>
+php yii Modman/modules/uninstall <moduleId>
+php yii Modman/modules/reconcile
+php yii Modman/modules/sync [--adoptAll]   # пересобрать реестр из реальности (см. ниже)
+php yii Modman/modules/recompile
+php yii Modman/menu/info       # диагностика локаций меню (вкл/выкл, файл, существование, число пунктов)
+php yii Modman/menu/rebuild    # перекомпилировать только артефакты меню
 ```
 
 (Для консоли модуль также должен быть в `modules` console-приложения.)
@@ -166,7 +166,7 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 ## Проверка синтаксиса (Docker)
 
 ```
-docker compose exec php sh -c 'find /home/node/app/modules/modman -name "*.php" -not -path "*/.git/*" -print0 | xargs -0 -n1 -P4 php -l'
+docker compose exec php sh -c 'find /home/node/app/packages/besnovatyj/modman/src -name "*.php" -not -path "*/.git/*" -print0 | xargs -0 -n1 -P4 php -l'
 ```
 
 ## Статус

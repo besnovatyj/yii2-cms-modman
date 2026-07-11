@@ -12,9 +12,9 @@ declare(strict_types=1);
 return [
     'label' => 'Модули',
     'iconClass' => 'bi bi-bricks me-1',
-    'url' => ['/modman/backend/modules/index'],
+    'url' => ['/Modman/backend/modules/index'],
     'active' => static function (): bool {
-        return str_contains(\Yii::$app->request->url, 'modman/backend/modules');
+        return str_contains(\Yii::$app->request->url, 'Modman/backend/modules');
     },
     '_meta' => [
         'placements' => [

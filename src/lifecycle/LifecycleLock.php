@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle;
+namespace Besnovatyj\Modman\lifecycle;
 
-use modules\modman\lifecycle\exception\LifecycleException;
+use Besnovatyj\Modman\lifecycle\exception\LifecycleException;
 use Throwable;
 use yii\mutex\Mutex;
 

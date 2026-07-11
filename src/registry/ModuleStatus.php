@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\registry;
+namespace Besnovatyj\Modman\registry;
 
 /**
  * Статус модуля в реестре — status-машина жизненного цикла.
@@ -14,7 +14,7 @@ namespace modules\modman\registry;
  * Разводит два состояния, которые в старом modman были слиты в `isInstalled() === hasModule()`:
  * «модуль прописан в конфиге» и «модуль реально применён (миграции/директории)». Транзиентные
  * статусы (installing/updating/removing) позволяют обнаружить незавершённую операцию после краша
- * и предложить восстановление ({@see \modules\modman\lifecycle\handler\ReconcileHandler}).
+ * и предложить восстановление ({@see \Besnovatyj\Modman\lifecycle\handler\ReconcileHandler}).
  */
 enum ModuleStatus: string
 {

@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\compiler;
+namespace Besnovatyj\Modman\compiler;
 
 /**
  * Результат чистой компиляции конфигурации — что должно быть записано в артефакты.

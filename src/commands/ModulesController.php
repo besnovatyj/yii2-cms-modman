@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\commands;
+namespace Besnovatyj\Modman\commands;
 
-use modules\modman\lifecycle\OperationReport;
-use modules\modman\lifecycle\plan\LifecyclePlan;
-use modules\modman\ModuleManager;
+use Besnovatyj\Modman\lifecycle\OperationReport;
+use Besnovatyj\Modman\lifecycle\plan\LifecyclePlan;
+use Besnovatyj\Modman\ModuleManager;
 use yii\console\Controller;
 use yii\console\ExitCode;
 use yii\helpers\Console;
@@ -21,14 +21,14 @@ use yii\helpers\Console;
  * Тонкая обёртка над тем же {@see ModuleManager}, что и web-контроллёр — демонстрация UI-агностичного
  * сервисного слоя (исправление связки «сервис ↔ session flash» старого modman). Пригодно для CI/Ansible.
  *
- *  - `php yii modman/modules/list`
- *  - `php yii modman/modules/check <moduleId>`
- *  - `php yii modman/modules/install <moduleId>`
- *  - `php yii modman/modules/uninstall <moduleId>`
- *  - `php yii modman/modules/update <moduleId>`
- *  - `php yii modman/modules/reconcile`
- *  - `php yii modman/modules/sync [--adoptAll]`
- *  - `php yii modman/modules/recompile`
+ *  - `php yii Modman/modules/list`
+ *  - `php yii Modman/modules/check <moduleId>`
+ *  - `php yii Modman/modules/install <moduleId>`
+ *  - `php yii Modman/modules/uninstall <moduleId>`
+ *  - `php yii Modman/modules/update <moduleId>`
+ *  - `php yii Modman/modules/reconcile`
+ *  - `php yii Modman/modules/sync [--adoptAll]`
+ *  - `php yii Modman/modules/recompile`
  */
 final class ModulesController extends Controller
 {

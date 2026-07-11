@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle;
+namespace Besnovatyj\Modman\lifecycle;
 
 /**
  * Тип операции жизненного цикла модуля.

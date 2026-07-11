@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog;
+namespace Besnovatyj\Modman\catalog;
 
 use Yii;
 

@@ -1,13 +1,33 @@
 {
-  "name": "modules/modman",
-  "description": "Система управления модулями CMS (compile-not-patch).",
+  "name": "besnovatyj/yii2-cms-modman",
+  "description": "Система управления модулями Yii2 CMS (compile-not-patch): discovery, реестр состояния, компиляция производных конфигов, lifecycle установки/удаления модулей.",
   "type": "yii2-extension",
   "license": "MIT",
+  "authors": [
+    {
+      "name": "Besnovatyj",
+      "email": "your-email@example.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "keywords": [
+    "yii2",
+    "cms",
+    "modules",
+    "module-manager",
+    "modman"
+  ],
+  "config": {
+    "sort-packages": true
+  },
   "require": {
-    "besnovatyj/yii2-cms-kernel": "^1.0",
     "php": ">=8.4",
     "yiisoft/yii2": "~2.0.0",
+    "besnovatyj/yii2-cms-kernel": "^1.0",
     "besnovatyj/yii2-cms-contracts": "^1.0"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-latest"
   },
   "suggest": {
     "composer/semver": "Полноценная проверка ограничений версий (^, ~, диапазоны) в зависимостях модулей"
@@ -16,12 +36,12 @@
     "bescms": {
       "kind": "module"
     },
-    "moduleClass": "modules\\modman\\Module",
-    "moduleId": "modman"
+    "moduleClass": "Besnovatyj\\Modman\\Module",
+    "moduleId": "Modman"
   },
   "autoload": {
     "psr-4": {
-      "modules\\modman\\": ""
+      "Besnovatyj\\Modman\\": "src/"
     }
   }
 }

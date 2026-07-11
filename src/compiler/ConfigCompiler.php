@@ -6,12 +6,12 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\compiler;
+namespace Besnovatyj\Modman\compiler;
 
 use Besnovatyj\Contracts\theme\ViewSourcesManifest;
-use modules\modman\catalog\ModuleManifest;
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\catalog\ModuleManifest;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\registry\ModuleRegistry;
 
 /**
  * Сердце архитектурного закона: производные конфиги собираются ЦЕЛИКОМ из (реестр × манифесты).
@@ -110,7 +110,7 @@ final class ConfigCompiler
 
     /**
      * Перекомпилировать и записать ТОЛЬКО артефакты меню — точечная операция для диагностики/обслуживания
-     * (аналог `modman/menu/rebuild`). Прочие артефакты не трогаются.
+     * (аналог `Modman/menu/rebuild`). Прочие артефакты не трогаются.
      */
     public function recompileMenus(): CompiledArtifacts
     {

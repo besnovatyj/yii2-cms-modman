@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\events;
+namespace Besnovatyj\Modman\events;
 
-use modules\modman\catalog\ModuleManifest;
+use Besnovatyj\Modman\catalog\ModuleManifest;
 
 /**
  * Событие жизненного цикла модуля, передаваемое подписчикам.

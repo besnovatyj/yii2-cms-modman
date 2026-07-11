@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\widgets;
+namespace Besnovatyj\Modman\widgets;
 
 use Yii;
 use yii\base\Widget;

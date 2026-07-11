@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog;
+namespace Besnovatyj\Modman\catalog;
 
-use modules\modman\registry\Version;
+use Besnovatyj\Modman\registry\Version;
 
 /**
  * Единый неизменяемый носитель метаданных пакета-модуля.

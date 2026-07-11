@@ -9,7 +9,7 @@ declare(strict_types=1);
 /**
  * Канал логирования системы управления модулями.
  *
- * Отдаётся через {@see \modules\modman\Module::logChannels()} (контракт ProvidesLogChannels);
+ * Отдаётся через {@see \Besnovatyj\Modman\Module::logChannels()} (контракт ProvidesLogChannels);
  * при компиляции попадает в артефакт logChannels и подмешивается в `log.targets`.
  *
  * Ключ массива — id таргета Yii (он же имя Monolog-канала). Ловит категорию `modman/*`. Сюда

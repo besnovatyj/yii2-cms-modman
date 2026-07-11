@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman;
+namespace Besnovatyj\Modman;
 
 /**
  * Представление модуля для UI: манифест каталога, наложенный на состояние реестра.

@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\compiler;
+namespace Besnovatyj\Modman\compiler;
 
 /**
  * Пути всех производных артефактов конфигурации.

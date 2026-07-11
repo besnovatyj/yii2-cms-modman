@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog;
+namespace Besnovatyj\Modman\catalog;
 
-use modules\modman\catalog\exception\ManifestException;
-use modules\modman\catalog\source\DiscoveredPackage;
-use modules\modman\catalog\source\ModuleSource;
+use Besnovatyj\Modman\catalog\exception\ManifestException;
+use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
+use Besnovatyj\Modman\catalog\source\ModuleSource;
 use Yii;
 
 /**

@@ -6,10 +6,10 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle\step;
+namespace Besnovatyj\Modman\lifecycle\step;
 
 use Besnovatyj\Helpers\FilesystemHelper;
-use modules\modman\lifecycle\OperationContext;
+use Besnovatyj\Modman\lifecycle\OperationContext;
 
 /**
  * Создаёт директории, требуемые модулем на домене статики. Компенсация удаляет только то, что

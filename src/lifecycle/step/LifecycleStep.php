@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle\step;
+namespace Besnovatyj\Modman\lifecycle\step;
 
-use modules\modman\lifecycle\OperationContext;
+use Besnovatyj\Modman\lifecycle\OperationContext;
 
 /**
  * Типизированный шаг операции с компенсацией (паттерн Saga).

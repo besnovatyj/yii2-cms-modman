@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog\source;
+namespace Besnovatyj\Modman\catalog\source;
 
 use Throwable;
 use Yii;

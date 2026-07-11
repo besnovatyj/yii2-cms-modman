@@ -7,35 +7,35 @@
 declare(strict_types=1);
 
 use Besnovatyj\Helpers\ArrayExportHelper;
-use modules\modman\catalog\ManifestFactory;
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\catalog\source\ComposerInstalledModuleSource;
-use modules\modman\catalog\source\FilesystemModuleSource;
-use modules\modman\compiler\ArtifactPaths;
-use modules\modman\compiler\AtomicWriter;
-use modules\modman\compiler\ConfigCompiler;
-use modules\modman\compiler\MenuCompiler;
-use modules\modman\compiler\ViewSourcesResolver;
-use modules\modman\deps\DependencyResolver;
-use modules\modman\events\ModuleLifecycleDispatcher;
-use modules\modman\lifecycle\handler\CheckHandler;
-use modules\modman\lifecycle\handler\InstallHandler;
-use modules\modman\lifecycle\handler\ReconcileHandler;
-use modules\modman\lifecycle\handler\SyncHandler;
-use modules\modman\lifecycle\handler\UninstallHandler;
-use modules\modman\lifecycle\handler\UpdateHandler;
-use modules\modman\lifecycle\LifecycleExecutor;
-use modules\modman\lifecycle\LifecycleLock;
-use modules\modman\lifecycle\LifecyclePlanner;
-use modules\modman\lifecycle\step\CreateDirectoriesStep;
-use modules\modman\lifecycle\step\RemoveDirectoriesStep;
-use modules\modman\lifecycle\step\RevertMigrationsStep;
-use modules\modman\lifecycle\step\RunMigrationsStep;
-use modules\modman\migration\MigrationOwnershipRepository;
-use modules\modman\migration\ModuleMigrationRunner;
-use modules\modman\migration\StandardMigrationHistory;
-use modules\modman\ModuleManager;
-use modules\modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\catalog\ManifestFactory;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\catalog\source\ComposerInstalledModuleSource;
+use Besnovatyj\Modman\catalog\source\FilesystemModuleSource;
+use Besnovatyj\Modman\compiler\ArtifactPaths;
+use Besnovatyj\Modman\compiler\AtomicWriter;
+use Besnovatyj\Modman\compiler\ConfigCompiler;
+use Besnovatyj\Modman\compiler\MenuCompiler;
+use Besnovatyj\Modman\compiler\ViewSourcesResolver;
+use Besnovatyj\Modman\deps\DependencyResolver;
+use Besnovatyj\Modman\events\ModuleLifecycleDispatcher;
+use Besnovatyj\Modman\lifecycle\handler\CheckHandler;
+use Besnovatyj\Modman\lifecycle\handler\InstallHandler;
+use Besnovatyj\Modman\lifecycle\handler\ReconcileHandler;
+use Besnovatyj\Modman\lifecycle\handler\SyncHandler;
+use Besnovatyj\Modman\lifecycle\handler\UninstallHandler;
+use Besnovatyj\Modman\lifecycle\handler\UpdateHandler;
+use Besnovatyj\Modman\lifecycle\LifecycleExecutor;
+use Besnovatyj\Modman\lifecycle\LifecycleLock;
+use Besnovatyj\Modman\lifecycle\LifecyclePlanner;
+use Besnovatyj\Modman\lifecycle\step\CreateDirectoriesStep;
+use Besnovatyj\Modman\lifecycle\step\RemoveDirectoriesStep;
+use Besnovatyj\Modman\lifecycle\step\RevertMigrationsStep;
+use Besnovatyj\Modman\lifecycle\step\RunMigrationsStep;
+use Besnovatyj\Modman\migration\MigrationOwnershipRepository;
+use Besnovatyj\Modman\migration\ModuleMigrationRunner;
+use Besnovatyj\Modman\migration\StandardMigrationHistory;
+use Besnovatyj\Modman\ModuleManager;
+use Besnovatyj\Modman\registry\ModuleRegistry;
 use yii\di\Container;
 use yii\mutex\FileMutex;
 
@@ -44,7 +44,7 @@ use yii\mutex\FileMutex;
  *
  * Все сервисы — синглтоны: каталог кэширует discovery, реестр держит состояние в памяти на запрос.
  * Скалярные/составные аргументы (пути, наборы источников) задаются явно; остальное собирается из
- * контейнера. Вызывается из {@see \modules\modman\Bootstrap}.
+ * контейнера. Вызывается из {@see \Besnovatyj\Modman\Bootstrap}.
  */
 return function (Container $container): void {
     $params = require __DIR__ . '/params.php';

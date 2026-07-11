@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\events;
+namespace Besnovatyj\Modman\events;
 
 use Throwable;
 use Yii;

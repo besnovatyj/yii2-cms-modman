@@ -6,23 +6,23 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle\handler;
+namespace Besnovatyj\Modman\lifecycle\handler;
 
-use modules\modman\catalog\ModuleManifest;
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\events\LifecyclePhase;
-use modules\modman\events\ModuleLifecycleDispatcher;
-use modules\modman\events\ModuleLifecycleEvent;
-use modules\modman\lifecycle\LifecycleExecutor;
-use modules\modman\lifecycle\LifecyclePlanner;
-use modules\modman\lifecycle\OperationContext;
-use modules\modman\lifecycle\OperationReport;
-use modules\modman\lifecycle\OperationType;
-use modules\modman\lifecycle\step\CreateDirectoriesStep;
-use modules\modman\lifecycle\step\RunMigrationsStep;
-use modules\modman\registry\ModuleRegistry;
-use modules\modman\registry\ModuleState;
-use modules\modman\registry\ModuleStatus;
+use Besnovatyj\Modman\catalog\ModuleManifest;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\events\LifecyclePhase;
+use Besnovatyj\Modman\events\ModuleLifecycleDispatcher;
+use Besnovatyj\Modman\events\ModuleLifecycleEvent;
+use Besnovatyj\Modman\lifecycle\LifecycleExecutor;
+use Besnovatyj\Modman\lifecycle\LifecyclePlanner;
+use Besnovatyj\Modman\lifecycle\OperationContext;
+use Besnovatyj\Modman\lifecycle\OperationReport;
+use Besnovatyj\Modman\lifecycle\OperationType;
+use Besnovatyj\Modman\lifecycle\step\CreateDirectoriesStep;
+use Besnovatyj\Modman\lifecycle\step\RunMigrationsStep;
+use Besnovatyj\Modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\registry\ModuleState;
+use Besnovatyj\Modman\registry\ModuleStatus;
 
 /**
  * Установка модуля.

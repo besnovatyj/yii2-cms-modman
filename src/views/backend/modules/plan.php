@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 /**
  * @var yii\web\View $this
- * @var modules\modman\lifecycle\plan\LifecyclePlan $plan
+ * @var Besnovatyj\Modman\lifecycle\plan\LifecyclePlan $plan
  */
 
 use yii\helpers\Html;

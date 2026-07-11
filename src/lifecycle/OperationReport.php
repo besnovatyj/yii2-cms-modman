@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle;
+namespace Besnovatyj\Modman\lifecycle;
 
 /**
  * Результат операции как DTO — что произошло, предупреждения, ошибки.

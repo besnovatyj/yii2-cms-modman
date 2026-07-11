@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\deps\exception;
+namespace Besnovatyj\Modman\deps\exception;
 
 use RuntimeException;
 

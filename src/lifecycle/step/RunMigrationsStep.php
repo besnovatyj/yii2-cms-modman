@@ -6,10 +6,10 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle\step;
+namespace Besnovatyj\Modman\lifecycle\step;
 
-use modules\modman\lifecycle\OperationContext;
-use modules\modman\migration\ModuleMigrationRunner;
+use Besnovatyj\Modman\lifecycle\OperationContext;
+use Besnovatyj\Modman\migration\ModuleMigrationRunner;
 
 /**
  * Применяет миграции модуля (только ещё не применённые — pending). Подходит и для install, и для update.

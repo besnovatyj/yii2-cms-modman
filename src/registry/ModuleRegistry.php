@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\registry;
+namespace Besnovatyj\Modman\registry;
 
-use modules\modman\compiler\AtomicWriter;
+use Besnovatyj\Modman\compiler\AtomicWriter;
 
 /**
  * Единый изменяемый источник истины о состоянии модулей — атомарный lock-файл.
@@ -17,7 +17,7 @@ use modules\modman\compiler\AtomicWriter;
  * приложения и его компонентов, включая `db`). Файл читается дёшево и без зависимостей. БД может
  * служить зеркалом для истории, но истина — здесь.
  *
- * Все производные конфиги ({@see \modules\modman\compiler\ConfigCompiler}) собираются из этого
+ * Все производные конфиги ({@see \Besnovatyj\Modman\compiler\ConfigCompiler}) собираются из этого
  * реестра. Запись — целиком и атомарно ({@see AtomicWriter}); под мьютексом lifecycle конкуренция
  * исключена.
  */

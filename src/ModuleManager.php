@@ -6,23 +6,23 @@
 
 declare(strict_types=1);
 
-namespace modules\modman;
+namespace Besnovatyj\Modman;
 
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\catalog\source\DiscoveredPackage;
-use modules\modman\compiler\CompiledArtifacts;
-use modules\modman\compiler\ConfigCompiler;
-use modules\modman\lifecycle\handler\CheckHandler;
-use modules\modman\lifecycle\handler\InstallHandler;
-use modules\modman\lifecycle\handler\ReconcileHandler;
-use modules\modman\lifecycle\handler\SyncHandler;
-use modules\modman\lifecycle\handler\UninstallHandler;
-use modules\modman\lifecycle\handler\UpdateHandler;
-use modules\modman\lifecycle\OperationReport;
-use modules\modman\lifecycle\plan\LifecyclePlan;
-use modules\modman\registry\ModuleRegistry;
-use modules\modman\registry\ModuleState;
-use modules\modman\registry\ModuleStatus;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
+use Besnovatyj\Modman\compiler\CompiledArtifacts;
+use Besnovatyj\Modman\compiler\ConfigCompiler;
+use Besnovatyj\Modman\lifecycle\handler\CheckHandler;
+use Besnovatyj\Modman\lifecycle\handler\InstallHandler;
+use Besnovatyj\Modman\lifecycle\handler\ReconcileHandler;
+use Besnovatyj\Modman\lifecycle\handler\SyncHandler;
+use Besnovatyj\Modman\lifecycle\handler\UninstallHandler;
+use Besnovatyj\Modman\lifecycle\handler\UpdateHandler;
+use Besnovatyj\Modman\lifecycle\OperationReport;
+use Besnovatyj\Modman\lifecycle\plan\LifecyclePlan;
+use Besnovatyj\Modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\registry\ModuleState;
+use Besnovatyj\Modman\registry\ModuleStatus;
 use Yii;
 
 /**

@@ -6,13 +6,13 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\controllers\backend;
+namespace Besnovatyj\Modman\controllers\backend;
 
-use modules\modman\forms\backend\search\ModuleSearch;
-use modules\modman\lifecycle\OperationReport;
-use modules\modman\lifecycle\OperationType;
-use modules\modman\ModuleManager;
-use modules\modman\widgets\OperationReportModal;
+use Besnovatyj\Modman\forms\backend\search\ModuleSearch;
+use Besnovatyj\Modman\lifecycle\OperationReport;
+use Besnovatyj\Modman\lifecycle\OperationType;
+use Besnovatyj\Modman\ModuleManager;
+use Besnovatyj\Modman\widgets\OperationReportModal;
 use Throwable;
 use Yii;
 use yii\filters\VerbFilter;

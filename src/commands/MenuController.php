@@ -6,20 +6,20 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\commands;
+namespace Besnovatyj\Modman\commands;
 
-use modules\modman\compiler\ConfigCompiler;
+use Besnovatyj\Modman\compiler\ConfigCompiler;
 use Yii;
 use yii\console\Controller;
 use yii\console\ExitCode;
 use yii\helpers\Console;
 
 /**
- * Диагностика и обслуживание меню (аналог `modman/menu/*` из старого modman).
+ * Диагностика и обслуживание меню (аналог `Modman/menu/*` из старого modman).
  *
- * Пересборка всех артефактов есть в `modman/modules/recompile`; здесь — точечные операции по меню:
- *  - `php yii modman/menu/info`    — состояние локаций меню (вкл/выкл, файл, существование, число пунктов);
- *  - `php yii modman/menu/rebuild` — перекомпилировать ТОЛЬКО артефакты меню.
+ * Пересборка всех артефактов есть в `Modman/modules/recompile`; здесь — точечные операции по меню:
+ *  - `php yii Modman/menu/info`    — состояние локаций меню (вкл/выкл, файл, существование, число пунктов);
+ *  - `php yii Modman/menu/rebuild` — перекомпилировать ТОЛЬКО артефакты меню.
  */
 final class MenuController extends Controller
 {

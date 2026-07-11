@@ -6,16 +6,16 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle;
+namespace Besnovatyj\Modman\lifecycle;
 
-use modules\modman\catalog\ModuleManifest;
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\compiler\ArtifactPaths;
-use modules\modman\deps\DependencyResolver;
-use modules\modman\deps\exception\DependencyException;
-use modules\modman\lifecycle\plan\LifecyclePlan;
-use modules\modman\lifecycle\plan\PlannedStep;
-use modules\modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\catalog\ModuleManifest;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\compiler\ArtifactPaths;
+use Besnovatyj\Modman\deps\DependencyResolver;
+use Besnovatyj\Modman\deps\exception\DependencyException;
+use Besnovatyj\Modman\lifecycle\plan\LifecyclePlan;
+use Besnovatyj\Modman\lifecycle\plan\PlannedStep;
+use Besnovatyj\Modman\registry\ModuleRegistry;
 use Yii;
 
 /**

@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman;
+namespace Besnovatyj\Modman;
 
 use Besnovatyj\Kernel\module\CmsModule;
 use Besnovatyj\Contracts\module\DeclaresModule;
@@ -27,9 +27,9 @@ use Yii;
  * собственного реестра — иначе некому скомпилировать конфиги. Здесь — страховка на случай, если
  * Bootstrap не добавлен в app bootstrap, чтобы web-контроллёр всё равно работал.
  *
- * Backend-маршруты: `/modman/backend/modules/...` (controllerNamespace по умолчанию
- * `modules\modman\controllers`, путь `backend/modules` резолвится в controllers\backend\ModulesController).
- * Console-маршруты: `modman/modules/...` (controllerNamespace переключается на commands).
+ * Backend-маршруты: `/Modman/backend/modules/...` (controllerNamespace по умолчанию
+ * `Besnovatyj\Modman\controllers`, путь `backend/modules` резолвится в controllers\backend\ModulesController).
+ * Console-маршруты: `Modman/modules/...` (controllerNamespace переключается на commands).
  */
 final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMenu, ProvidesLogChannels
 {
@@ -50,7 +50,7 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMen
 
     public static function moduleId(): string
     {
-        return 'modman';
+        return 'Modman';
     }
 
     public static function moduleVersion(): string

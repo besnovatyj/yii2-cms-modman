@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\migration;
+namespace Besnovatyj\Modman\migration;
 
 use yii\db\Connection;
 use yii\db\Query;

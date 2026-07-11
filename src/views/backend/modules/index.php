@@ -8,15 +8,15 @@ declare(strict_types=1);
 
 /**
  * @var yii\web\View $this
- * @var modules\modman\forms\backend\search\ModuleSearch $search
+ * @var Besnovatyj\Modman\forms\backend\search\ModuleSearch $search
  * @var yii\data\ArrayDataProvider $dataProvider
- * @var modules\modman\catalog\source\DiscoveredPackage[] $packages
- * @var array<string, modules\modman\registry\ModuleState> $pending
+ * @var Besnovatyj\Modman\catalog\source\DiscoveredPackage[] $packages
+ * @var array<string, Besnovatyj\Modman\registry\ModuleState> $pending
  */
 
 use Besnovatyj\Backend\Widgets\pagination\LinkPager;
-use modules\modman\forms\backend\search\ModuleSearch;
-use modules\modman\widgets\OperationReportModal;
+use Besnovatyj\Modman\forms\backend\search\ModuleSearch;
+use Besnovatyj\Modman\widgets\OperationReportModal;
 use yii\helpers\Html;
 
 $sort = $dataProvider->getSort();

@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\catalog\exception;
+namespace Besnovatyj\Modman\catalog\exception;
 
 use RuntimeException;
 

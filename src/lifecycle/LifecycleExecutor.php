@@ -6,10 +6,10 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle;
+namespace Besnovatyj\Modman\lifecycle;
 
-use modules\modman\compiler\ConfigCompiler;
-use modules\modman\lifecycle\step\LifecycleStep;
+use Besnovatyj\Modman\compiler\ConfigCompiler;
+use Besnovatyj\Modman\lifecycle\step\LifecycleStep;
 use Throwable;
 use Yii;
 

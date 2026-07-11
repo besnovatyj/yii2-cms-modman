@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\forms\backend\search;
+namespace Besnovatyj\Modman\forms\backend\search;
 
 use Besnovatyj\Forms\BaseForm;
-use modules\modman\catalog\source\DiscoveredPackage;
-use modules\modman\ModuleView;
+use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
+use Besnovatyj\Modman\ModuleView;
 use yii\data\ArrayDataProvider;
 
 /**

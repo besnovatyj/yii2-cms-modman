@@ -6,13 +6,13 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle\handler;
+namespace Besnovatyj\Modman\lifecycle\handler;
 
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\lifecycle\LifecyclePlanner;
-use modules\modman\lifecycle\OperationType;
-use modules\modman\lifecycle\plan\LifecyclePlan;
-use modules\modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\lifecycle\LifecyclePlanner;
+use Besnovatyj\Modman\lifecycle\OperationType;
+use Besnovatyj\Modman\lifecycle\plan\LifecyclePlan;
+use Besnovatyj\Modman\registry\ModuleRegistry;
 
 /**
  * Проверка возможности операции (dry-run) — возвращает чистый {@see LifecyclePlan}, ничего не меняя.

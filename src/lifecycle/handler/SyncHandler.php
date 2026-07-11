@@ -6,17 +6,17 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\lifecycle\handler;
+namespace Besnovatyj\Modman\lifecycle\handler;
 
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\compiler\ConfigCompiler;
-use modules\modman\lifecycle\LifecycleLock;
-use modules\modman\lifecycle\OperationReport;
-use modules\modman\lifecycle\OperationType;
-use modules\modman\migration\MigrationOwnershipRepository;
-use modules\modman\registry\ModuleRegistry;
-use modules\modman\registry\ModuleState;
-use modules\modman\registry\ModuleStatus;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\compiler\ConfigCompiler;
+use Besnovatyj\Modman\lifecycle\LifecycleLock;
+use Besnovatyj\Modman\lifecycle\OperationReport;
+use Besnovatyj\Modman\lifecycle\OperationType;
+use Besnovatyj\Modman\migration\MigrationOwnershipRepository;
+use Besnovatyj\Modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\registry\ModuleState;
+use Besnovatyj\Modman\registry\ModuleStatus;
 use Throwable;
 
 /**

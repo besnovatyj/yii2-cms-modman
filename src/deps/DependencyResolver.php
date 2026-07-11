@@ -6,12 +6,12 @@
 
 declare(strict_types=1);
 
-namespace modules\modman\deps;
+namespace Besnovatyj\Modman\deps;
 
-use modules\modman\catalog\ModuleManifest;
-use modules\modman\catalog\PackageCatalog;
-use modules\modman\deps\exception\DependencyException;
-use modules\modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\catalog\ModuleManifest;
+use Besnovatyj\Modman\catalog\PackageCatalog;
+use Besnovatyj\Modman\deps\exception\DependencyException;
+use Besnovatyj\Modman\registry\ModuleRegistry;
 use Yii;
 
 /**
