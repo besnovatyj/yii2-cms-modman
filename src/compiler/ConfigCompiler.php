@@ -135,14 +135,16 @@ final class ConfigCompiler
      */
     public function persist(CompiledArtifacts $artifacts): void
     {
-        $this->writer->writeArray($this->paths->modulesConfig, $artifacts->modules);
-        // bootstrap-артефакт больше не пишем: L2-bootstrap (registry-gated) реализуется через config-plugin
-        // (merge-plan modman) — по решению владельца. Лог-каналы, наоборот, ОСТАЮТСЯ через компиляцию ниже.
-        $this->writer->writeArray($this->paths->componentsConfig, $artifacts->components);
+        // modules / components / bootstrap / appConfig больше НЕ генерим: они собираются движком
+        // yiisoft/config по merge-plan (config-plugin, registry-gated через MergePlanCompiler).
+        // Остаётся генерация:
+        //  - logChannels — registry-gated лог-каналы устанавливаемых модулей (по требованию владельца,
+        //    активируются modman'ом, а не глобальным composer-bootstrap; см. common/config/log.php);
+        //  - options — реестр опций для модуля конфигурации;
+        //  - viewSources — тема-независимый манифест источников представлений (темизация).
         $this->writer->writeArray($this->paths->logChannelsConfig, $artifacts->logChannels);
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
         $this->writer->writeArray($this->paths->viewSourcesConfig, $artifacts->viewSources);
-        $this->writer->writeArray($this->paths->appConfigConfig, $artifacts->appConfig);
     }
 
     /**
