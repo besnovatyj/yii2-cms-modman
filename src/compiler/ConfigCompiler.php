@@ -135,13 +135,13 @@ final class ConfigCompiler
      */
     public function persist(CompiledArtifacts $artifacts): void
     {
-        // Пишем только артефакты, которые ещё потребляются:
-        //  - options — реестр опций для модуля конфигурации;
-        //  - viewSources — тема-независимый манифест источников представлений (темизация).
-        // Остальное (modules/components/bootstrap/logChannels/appConfig/menu) собирается движком
-        // yiisoft/config по merge-plan / config-plugin, ядро эти артефакты больше не читает.
+        $this->writer->writeArray($this->paths->modulesConfig, $artifacts->modules);
+        $this->writer->writeArray($this->paths->bootstrapConfig, $artifacts->bootstrap);
+        $this->writer->writeArray($this->paths->componentsConfig, $artifacts->components);
+        $this->writer->writeArray($this->paths->logChannelsConfig, $artifacts->logChannels);
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
         $this->writer->writeArray($this->paths->viewSourcesConfig, $artifacts->viewSources);
+        $this->writer->writeArray($this->paths->appConfigConfig, $artifacts->appConfig);
     }
 
     /**
