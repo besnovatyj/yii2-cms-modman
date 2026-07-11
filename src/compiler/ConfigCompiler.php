@@ -175,13 +175,34 @@ final class ConfigCompiler
         array &$warnings,
     ): void {
         $id = $manifest->id;
-        $modules[$id] = $manifest->compiledModuleConfig();
+
+        // --- НЕ-Yii2-конфиг: остаётся у modman всегда, независимо от config-plugin ---------------
 
         // Источник представлений модуля (алиасный путь views/) для тема-независимого манифеста.
         $sourceAlias = $this->viewSourcesResolver->sourceAlias($manifest->moduleClass);
         if ($sourceAlias !== null) {
             $viewSources[$id] = $sourceAlias;
         }
+
+        // Опции (агрегат для модуля конфигурации) — не Yii2-конфиг приложения.
+        if ($manifest->contributions->options !== []) {
+            $options[$id] = $manifest->contributions->options;
+        }
+
+        // Меню (система меню modman → артефакты menu-*.php) — не Yii2-конфиг приложения.
+        if ($manifest->contributions->hasAdminMenu()) {
+            $menuContributions[] = $manifest->contributions->adminMenu;
+        }
+
+        // --- Yii2-конфиг приложения ------------------------------------------------------------
+        // Если модуль объявил config-plugin, его конфиг (modules[]/components/bootstrap/as*) собирается
+        // движком yiisoft/config по merge-plan (см. MergePlanCompiler). Тогда старые артефакты его НЕ
+        // включают — иначе двойная загрузка. См. /TODO_YII3_CONFIG.MD.
+        if ($manifest->contributions->configPlugin !== []) {
+            return;
+        }
+
+        $modules[$id] = $manifest->compiledModuleConfig();
 
         foreach ($manifest->contributions->bootstrap as $class) {
             if (!in_array($class, $bootstrap, true)) {
@@ -191,14 +212,6 @@ final class ConfigCompiler
 
         $this->mergeNamed($components, $manifest->contributions->components, $id, 'компонент', $warnings);
         $this->mergeNamed($logChannels, $manifest->contributions->logChannels, $id, 'канал лога', $warnings);
-
-        if ($manifest->contributions->options !== []) {
-            $options[$id] = $manifest->contributions->options;
-        }
-
-        if ($manifest->contributions->hasAdminMenu()) {
-            $menuContributions[] = $manifest->contributions->adminMenu;
-        }
 
         // Пер-аппликационный вклад: частичные деревья конфига мёржатся по appId (deep merge —
         // allowActions нескольких модулей конкатенируются, компоненты дополняются). Вклад уже
