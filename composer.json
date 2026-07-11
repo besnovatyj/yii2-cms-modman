@@ -3,6 +3,7 @@
   "description": "Система управления модулями Yii2 CMS (compile-not-patch): discovery, реестр состояния, компиляция производных конфигов, lifecycle установки/удаления модулей.",
   "type": "yii2-extension",
   "license": "MIT",
+  "version": "v1.0.0",
   "authors": [
     {
       "name": "Besnovatyj",
