@@ -21,22 +21,15 @@ return [
         '@modules',
     ],
 
-    // Производные артефакты конфигурации (компилируются целиком из реестра).
+    // Производные артефакты, которые ещё компилирует modman. modules/components/bootstrap/appConfig/меню
+    // после переезда на yiisoft/config собираются движком по merge-plan и здесь не фигурируют.
     'artifacts' => [
-        'modules' => '@config-dyn-gen/modulesConfigFile.php',
-        'bootstrap' => '@config-dyn-gen/bootstrapComponentsAndModulesConfigFile.php',
-        'components' => '@config-dyn-gen/componentsConfigFile.php',
+        // Registry-gated лог-каналы устанавливаемых модулей (см. common/config/log.php).
         'logChannels' => '@config-dyn-gen/logChannelsConfigFile.php',
-        // Реестр опций (агрегат Module::options() всех модулей) для модуля конфигурации
-        // `besnovatyj/yii2-cms-config`. Формат и семантику опций знает только он — он полноправный
-        // хозяин этой области; modman лишь собирает данные. Сейчас config читает опции рефлексией
-        // (ProvidesOptions) и этот артефакт не потребляет — файл держим для него на будущее.
+        // Реестр опций (агрегат Module::options()) для модуля конфигурации `besnovatyj/yii2-cms-config`.
         'options' => '@config-dyn-gen/moduleOptions.php',
         // Тема-НЕзависимый манифест источников представлений (см. common params 'moduleViewSourcesFile').
         'viewSources' => '@config-dyn-gen/moduleViewSources.php',
-        // Пер-аппликационные вклады модулей (ProvidesAppConfig): appId => частичное дерево конфига.
-        // Каждый main.php приложения подмешивает свой ключ через ArrayHelper::merge.
-        'appConfig' => '@config-dyn-gen/appConfigFile.php',
         // Merge-plan для движка yiisoft/config (Yii3): [env][group][package][]=file. Читается
         // рантайм-обёрткой common\config\ConfigFactory. См. MergePlanCompiler.
         'mergePlan' => '@config-dyn-gen/merge-plan.php',

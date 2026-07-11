@@ -48,7 +48,6 @@ final class ModulesController extends Controller
                     'update' => ['POST'],
                     'reconcile' => ['POST'],
                     'recompile' => ['POST'],
-                    'rebuild-menus' => ['POST'],
                 ],
             ],
         ]);
@@ -107,12 +106,6 @@ final class ModulesController extends Controller
     public function actionRecompile(): Response
     {
         $this->flashArtifacts('Пересборка конфигурации', 'Конфигурация перекомпилирована из реестра.', 'Ошибка перекомпиляции: ', fn() => $this->manager->recompile()->warnings);
-        return $this->redirect(['index']);
-    }
-
-    public function actionRebuildMenus(): Response
-    {
-        $this->flashArtifacts('Пересборка меню', 'Меню перекомпилировано из реестра.', 'Ошибка пересборки меню: ', fn() => $this->manager->recompileMenus()->warnings);
         return $this->redirect(['index']);
     }
 

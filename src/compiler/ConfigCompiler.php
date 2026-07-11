@@ -12,24 +12,25 @@ use Besnovatyj\Contracts\theme\ViewSourcesManifest;
 use Besnovatyj\Modman\catalog\ModuleManifest;
 use Besnovatyj\Modman\catalog\PackageCatalog;
 use Besnovatyj\Modman\registry\ModuleRegistry;
-use yii\helpers\ArrayHelper;
 
 /**
- * Сердце архитектурного закона: производные конфиги собираются ЦЕЛИКОМ из (реестр × манифесты).
+ * Компилятор оставшихся производных артефактов из (реестр × манифесты).
  *
- * `compile()` — чистая функция (только чтение реестра и каталога), `persist()` — единственная запись
- * через {@see AtomicWriter}. Это устраняет инкрементальные правки и `*_backup` старого modman:
- * откат любой операции = «вернуть реестр и перекомпилировать».
+ * После переезда на yiisoft/config Yii2-конфиг приложения (modules/components/bootstrap/appConfig/меню)
+ * собирается движком по merge-plan (config-plugin, registry-gated {@see MergePlanCompiler}). Здесь
+ * остаётся генерация того, что движком НЕ покрывается:
+ *  - `logChannels` — registry-gated лог-каналы устанавливаемых модулей (включаются modman'ом при
+ *    активации, а не глобальным composer-bootstrap; потребляется common/config/log.php);
+ *  - `options` — реестр опций для модуля конфигурации;
+ *  - `viewSources` — тема-независимый манифест источников представлений (темизация).
  *
- * Источник истины о наборе модулей — реестр (статус installed). Контент вкладов берётся из манифеста
- * того же модуля в каталоге.
+ * Источник истины о наборе активных модулей — реестр; контент вкладов — из манифеста в каталоге.
  */
 final class ConfigCompiler
 {
     public function __construct(
         private readonly ModuleRegistry $registry,
         private readonly PackageCatalog $catalog,
-        private readonly MenuCompiler   $menuCompiler,
         private readonly AtomicWriter   $writer,
         private readonly ArtifactPaths  $paths,
         private readonly ViewSourcesResolver $viewSourcesResolver,
@@ -41,25 +42,17 @@ final class ConfigCompiler
      */
     public function compile(): CompiledArtifacts
     {
-        $modules = [];
-        $bootstrap = [];
-        $components = [];
         $logChannels = [];
         $options = [];
-        $menuContributions = [];
         // Тема-НЕзависимый манифест источников представлений: корневой ключ приложения + модули.
         $viewSources = [ViewSourcesManifest::APP_VIEWS_KEY => ''];
-        // Пер-аппликационные вклады: appId => частичное дерево конфига (merge нескольких модулей).
-        $appConfig = [];
         $warnings = [];
         $compiled = [];
 
-        // Системные модули (editable=false) активны ВСЕГДА: они ставятся ядром/бутстрапом и в реестре
-        // их нет (как у самого менеджера). Без этого их конфиг и меню вымывались бы при каждой recompile
-        // — модуль «исчезал» бы из приложения после любой install/uninstall.
+        // Системные модули (editable=false) активны ВСЕГДА (в реестре их нет, как у самого менеджера).
         foreach ($this->catalog->manifests() as $id => $manifest) {
             if (!$manifest->editable) {
-                $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $appConfig, $warnings);
+                $this->addManifest($manifest, $logChannels, $options, $viewSources, $warnings);
                 $compiled[$id] = true;
             }
         }
@@ -76,30 +69,19 @@ final class ConfigCompiler
                 continue;
             }
 
-            $this->addManifest($manifest, $modules, $bootstrap, $components, $logChannels, $options, $menuContributions, $viewSources, $appConfig, $warnings);
+            $this->addManifest($manifest, $logChannels, $options, $viewSources, $warnings);
             $compiled[$id] = true;
         }
 
-        $menusByLocation = $this->menuCompiler->compile($this->menuCompiler->flatten($menuContributions));
-
         // Детерминизм: стабильный порядок ключей.
-        ksort($modules);
-        ksort($components);
         ksort($logChannels);
         ksort($options);
         ksort($viewSources);
-        ksort($appConfig);
-        sort($bootstrap);
 
         return new CompiledArtifacts(
-            modules: $modules,
-            bootstrap: $bootstrap,
-            components: $components,
             logChannels: $logChannels,
             options: $options,
-            menusByLocation: $menusByLocation,
             viewSources: $viewSources,
-            appConfig: $appConfig,
             warnings: $warnings,
         );
     }
@@ -118,64 +100,36 @@ final class ConfigCompiler
     }
 
     /**
-     * @deprecated Меню собираются в рантайме из группы `admin-menu` (yiisoft/config, {@see \Besnovatyj\Modman\menu\MenuProvider}),
-     * а не сериализуются в `menu-*.php` (замыкания `active` не переживают var_export). Метод оставлен для
-     * совместимости вызывающих (web/console «пересобрать меню») — теперь без записи артефактов меню.
-     */
-    public function recompileMenus(): CompiledArtifacts
-    {
-        return $this->compile();
-    }
-
-    /**
-     * Записать артефакты на диск (атомарно, по одному файлу).
-     *
-     * Меню НЕ пишутся: они собираются в рантайме из группы `admin-menu` — единственные замыкания, ради
-     * которых был нужен экспорт замыканий; их сериализация упразднена вместе с exportClosure.
+     * Записать артефакты на диск (атомарно, по одному файлу). Единственная точка записи.
      */
     public function persist(CompiledArtifacts $artifacts): void
     {
-        // modules / components / bootstrap / appConfig больше НЕ генерим: они собираются движком
-        // yiisoft/config по merge-plan (config-plugin, registry-gated через MergePlanCompiler).
-        // Остаётся генерация:
-        //  - logChannels — registry-gated лог-каналы устанавливаемых модулей (по требованию владельца,
-        //    активируются modman'ом, а не глобальным composer-bootstrap; см. common/config/log.php);
-        //  - options — реестр опций для модуля конфигурации;
-        //  - viewSources — тема-независимый манифест источников представлений (темизация).
         $this->writer->writeArray($this->paths->logChannelsConfig, $artifacts->logChannels);
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
         $this->writer->writeArray($this->paths->viewSourcesConfig, $artifacts->viewSources);
     }
 
     /**
-     * Накопить вклады одного манифеста в собираемые артефакты. Общий код для системных (всегда активных)
-     * и установленных через реестр модулей.
+     * Накопить вклады одного манифеста в оставшиеся артефакты (для системных и registry-active модулей).
      *
-     * @param array<string, array> $modules
-     * @param string[]             $bootstrap
-     * @param array<string, array> $components
-     * @param array<string, array> $logChannels
-     * @param array<string, array>  $options
-     * @param array<int, array>     $menuContributions
-     * @param array<string, string> $viewSources
-     * @param array<string, array>  $appConfig
+     * Всё это — НЕ Yii2-конфиг приложения (тот идёт через config-plugin/merge-plan), поэтому собирается
+     * для ЛЮБОГО активного модуля, включая объявившие config-plugin. В частности `logChannels` больше НЕ
+     * пропускаются у config-plugin-модулей — иначе будущие shop-модули не смогли бы поставлять свои
+     * registry-gated цели логирования.
+     *
+     * @param array<string, array>  $logChannels channelId => спека
+     * @param array<string, array>  $options     id модуля => опции
+     * @param array<string, string> $viewSources moduleId => алиасный путь views/
      * @param string[]              $warnings
      */
     private function addManifest(
         ModuleManifest $manifest,
-        array &$modules,
-        array &$bootstrap,
-        array &$components,
         array &$logChannels,
         array &$options,
-        array &$menuContributions,
         array &$viewSources,
-        array &$appConfig,
         array &$warnings,
     ): void {
         $id = $manifest->id;
-
-        // --- НЕ-Yii2-конфиг: остаётся у modman всегда, независимо от config-plugin ---------------
 
         // Источник представлений модуля (алиасный путь views/) для тема-независимого манифеста.
         $sourceAlias = $this->viewSourcesResolver->sourceAlias($manifest->moduleClass);
@@ -183,43 +137,13 @@ final class ConfigCompiler
             $viewSources[$id] = $sourceAlias;
         }
 
-        // Опции (агрегат для модуля конфигурации) — не Yii2-конфиг приложения.
+        // Опции (агрегат для модуля конфигурации).
         if ($manifest->contributions->options !== []) {
             $options[$id] = $manifest->contributions->options;
         }
 
-        // Меню (система меню modman → артефакты menu-*.php) — не Yii2-конфиг приложения.
-        if ($manifest->contributions->hasAdminMenu()) {
-            $menuContributions[] = $manifest->contributions->adminMenu;
-        }
-
-        // --- Yii2-конфиг приложения ------------------------------------------------------------
-        // Если модуль объявил config-plugin, его конфиг (modules[]/components/bootstrap/as*) собирается
-        // движком yiisoft/config по merge-plan (см. MergePlanCompiler). Тогда старые артефакты его НЕ
-        // включают — иначе двойная загрузка. См. /TODO_YII3_CONFIG.MD.
-        if ($manifest->contributions->configPlugin !== []) {
-            return;
-        }
-
-        $modules[$id] = $manifest->compiledModuleConfig();
-
-        foreach ($manifest->contributions->bootstrap as $class) {
-            if (!in_array($class, $bootstrap, true)) {
-                $bootstrap[] = $class;
-            }
-        }
-
-        $this->mergeNamed($components, $manifest->contributions->components, $id, 'компонент', $warnings);
+        // Registry-gated лог-каналы: включаются modman'ом при активации модуля.
         $this->mergeNamed($logChannels, $manifest->contributions->logChannels, $id, 'канал лога', $warnings);
-
-        // Пер-аппликационный вклад: частичные деревья конфига мёржатся по appId (deep merge —
-        // allowActions нескольких модулей конкатенируются, компоненты дополняются). Вклад уже
-        // отфильтрован политикой в ManifestFactory, поэтому as access.class сюда попасть не может.
-        foreach ($manifest->contributions->appConfig as $appId => $contribution) {
-            $appConfig[$appId] = isset($appConfig[$appId])
-                ? ArrayHelper::merge($appConfig[$appId], $contribution)
-                : $contribution;
-        }
     }
 
     /**

@@ -9,34 +9,24 @@ declare(strict_types=1);
 namespace Besnovatyj\Modman\compiler;
 
 /**
- * Результат чистой компиляции конфигурации — что должно быть записано в артефакты.
+ * Результат чистой компиляции оставшихся артефактов ({@see ConfigCompiler}).
  *
- * Полностью детерминирован относительно (реестр × манифесты): при одинаковом входе — одинаковый
- * выход (ключи отсортированы в {@see ConfigCompiler}). Это и есть критерий «красоты» новой
- * архитектуры — повторная install/uninstall даёт побайтово те же артефакты.
+ * После переезда на yiisoft/config Yii2-конфиг приложения собирается движком по merge-plan, поэтому
+ * здесь только то, что компилятор ещё производит: registry-gated лог-каналы, опции и источники
+ * представлений. Детерминирован относительно (реестр × манифесты) — ключи отсортированы в компиляторе.
  */
 final readonly class CompiledArtifacts
 {
     /**
-     * @param array<string, array>  $modules         id => конфиг модуля
-     * @param array<int, string>     $bootstrap       список bootstrap-классов
-     * @param array<string, array>   $components      componentId => конфиг
-     * @param array<string, array>   $logChannels     channelId => спека
-     * @param array<string, array>   $options         id модуля => опции
-     * @param array<string, array>   $menusByLocation location => дерево меню
-     * @param array<string, string>  $viewSources     moduleId => алиасный путь views/ (+ ключ @app/views)
-     * @param array<string, array>   $appConfig       appId => частичное дерево конфига приложения (merge-вклад)
-     * @param string[]               $warnings        нефатальные проблемы компиляции
+     * @param array<string, array>   $logChannels channelId => спека (registry-gated лог-каналы)
+     * @param array<string, array>   $options     id модуля => опции
+     * @param array<string, string>  $viewSources moduleId => алиасный путь views/ (+ ключ @app/views)
+     * @param string[]               $warnings    нефатальные проблемы компиляции
      */
     public function __construct(
-        public array $modules,
-        public array $bootstrap,
-        public array $components,
-        public array $logChannels,
-        public array $options,
-        public array $menusByLocation,
+        public array $logChannels = [],
+        public array $options = [],
         public array $viewSources = [],
-        public array $appConfig = [],
         public array $warnings = [],
     ) {}
 }

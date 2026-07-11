@@ -56,24 +56,11 @@ return function (Container $container): void {
         => new AtomicWriter($c->get(ArrayExportHelper::class)));
 
     // --- Пути артефактов ---------------------------------------------------------------------
-    $container->setSingleton(ArtifactPaths::class, static function () use ($params): ArtifactPaths {
-        $menuFiles = [];
-        foreach ($params['menuLocations'] as $location => $cfg) {
-            if ($cfg['enabled'] ?? false) {
-                $menuFiles[$location] = Yii::getAlias($cfg['file']);
-            }
-        }
-        return new ArtifactPaths(
-            modulesConfig: Yii::getAlias($params['artifacts']['modules']),
-            bootstrapConfig: Yii::getAlias($params['artifacts']['bootstrap']),
-            componentsConfig: Yii::getAlias($params['artifacts']['components']),
-            logChannelsConfig: Yii::getAlias($params['artifacts']['logChannels']),
-            optionsConfig: Yii::getAlias($params['artifacts']['options']),
-            viewSourcesConfig: Yii::getAlias($params['artifacts']['viewSources']),
-            appConfigConfig: Yii::getAlias($params['artifacts']['appConfig']),
-            menuLocationFiles: $menuFiles,
-        );
-    });
+    $container->setSingleton(ArtifactPaths::class, static fn(): ArtifactPaths => new ArtifactPaths(
+        logChannelsConfig: Yii::getAlias($params['artifacts']['logChannels']),
+        optionsConfig: Yii::getAlias($params['artifacts']['options']),
+        viewSourcesConfig: Yii::getAlias($params['artifacts']['viewSources']),
+    ));
 
     // --- Реестр состояния --------------------------------------------------------------------
     $container->setSingleton(ModuleRegistry::class, static fn(Container $c): ModuleRegistry
@@ -122,7 +109,6 @@ return function (Container $container): void {
         => new ConfigCompiler(
             $c->get(ModuleRegistry::class),
             $c->get(PackageCatalog::class),
-            $c->get(MenuCompiler::class),
             $c->get(AtomicWriter::class),
             $c->get(ArtifactPaths::class),
             $c->get(ViewSourcesResolver::class),

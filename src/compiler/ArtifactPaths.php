@@ -9,22 +9,17 @@ declare(strict_types=1);
 namespace Besnovatyj\Modman\compiler;
 
 /**
- * Пути всех производных артефактов конфигурации.
+ * Пути производных артефактов, которые компилятор ещё генерирует (см. {@see ConfigCompiler}).
+ *
+ * modules/components/bootstrap/appConfig/menu после переезда на yiisoft/config собираются движком
+ * по merge-plan и здесь не фигурируют.
  */
 final readonly class ArtifactPaths
 {
-    /**
-     * @param array<string, string> $menuLocationFiles location => абсолютный путь файла (только включённые)
-     */
     public function __construct(
-        public string $modulesConfig,
-        public string $bootstrapConfig,
-        public string $componentsConfig,
         public string $logChannelsConfig,
         public string $optionsConfig,
         public string $viewSourcesConfig,
-        public string $appConfigConfig,
-        public array  $menuLocationFiles,
     ) {}
 
     /**
@@ -33,9 +28,6 @@ final readonly class ArtifactPaths
      */
     public function all(): array
     {
-        return array_merge(
-            [$this->modulesConfig, $this->bootstrapConfig, $this->componentsConfig, $this->logChannelsConfig, $this->optionsConfig, $this->viewSourcesConfig, $this->appConfigConfig],
-            array_values($this->menuLocationFiles),
-        );
+        return [$this->logChannelsConfig, $this->optionsConfig, $this->viewSourcesConfig];
     }
 }
