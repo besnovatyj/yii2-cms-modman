@@ -9,7 +9,7 @@ declare(strict_types=1);
 /**
  * Пункт меню админки для самого менеджера (для ручного добавления в меню приложения при желании).
  */
-return [
+return [[
     'label' => 'Модули',
     'iconClass' => 'bi bi-bricks me-1',
     'url' => ['/Modman/backend/modules/index'],
@@ -27,4 +27,4 @@ return [
             ],
         ],
     ],
-];
+]];
