@@ -117,6 +117,7 @@ final class ManifestFactory
             logChannels: $this->implementsContract($class, ProvidesLogChannels::class) ? $class::logChannels() : [],
             directories: $this->implementsContract($class, ProvidesDirectories::class) ? $this->buildDirectories($class::directories()) : [],
             appConfig: $this->implementsContract($class, ProvidesAppConfig::class) ? $this->sanitizeAppConfig($class::appConfig()) : [],
+            configPlugin: $package->configPlugin,
             migrationPath: $this->implementsContract($class, ProvidesMigrations::class) ? Yii::getAlias($class::migrationPath()) : null,
             migrationNamespace: $this->implementsContract($class, ProvidesMigrations::class) ? $class::migrationNamespace() : null,
         );

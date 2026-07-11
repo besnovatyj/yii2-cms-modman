@@ -27,6 +27,8 @@ final readonly class Contributions
      * @param array<string, array> $appConfig appId => частичное дерево конфига приложения (ключи 1:1
      *        с Yii-конфигом), уже пропущенное через allowlist политики {@see ManifestFactory}: разрешены
      *        `components`, `params` и `as access.allowActions`; `as access.class` и прочее вырезаны
+     * @param array<string, string|string[]> $configPlugin `extra.config-plugin` пакета (group => file|files)
+     *        для merge-plan (yiisoft/config). Пути относительны корня пакета. См. {@see \Besnovatyj\Modman\compiler\MergePlanCompiler}.
      */
     public function __construct(
         public array   $components = [],
@@ -36,6 +38,7 @@ final readonly class Contributions
         public array   $logChannels = [],
         public array   $directories = [],
         public array   $appConfig = [],
+        public array   $configPlugin = [],
         public ?string $migrationPath = null,
         public ?string $migrationNamespace = null,
     ) {}

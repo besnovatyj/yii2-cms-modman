@@ -14,6 +14,7 @@ use Besnovatyj\Modman\catalog\source\FilesystemModuleSource;
 use Besnovatyj\Modman\compiler\ArtifactPaths;
 use Besnovatyj\Modman\compiler\AtomicWriter;
 use Besnovatyj\Modman\compiler\ConfigCompiler;
+use Besnovatyj\Modman\compiler\MergePlanCompiler;
 use Besnovatyj\Modman\compiler\MenuCompiler;
 use Besnovatyj\Modman\compiler\ViewSourcesResolver;
 use Besnovatyj\Modman\deps\DependencyResolver;
@@ -93,6 +94,26 @@ return function (Container $container): void {
     $container->setSingleton(MenuCompiler::class, static fn(): MenuCompiler
         => new MenuCompiler(array_keys($params['menuLocations']), $params['menuDefaults']));
     $container->setSingleton(ViewSourcesResolver::class, ViewSourcesResolver::class);
+
+    // Merge-plan для yiisoft/config: root config-plugin читаем из корневого composer.json приложения.
+    $container->setSingleton(MergePlanCompiler::class, static function (Container $c) use ($params): MergePlanCompiler {
+        $rootConfigPlugin = [];
+        $composerPath = Yii::getAlias('@root/composer.json', false);
+        if (is_string($composerPath) && is_file($composerPath)) {
+            $decoded = json_decode((string)file_get_contents($composerPath), true);
+            if (is_array($decoded) && is_array($decoded['extra']['config-plugin'] ?? null)) {
+                $rootConfigPlugin = $decoded['extra']['config-plugin'];
+            }
+        }
+        return new MergePlanCompiler(
+            $c->get(ModuleRegistry::class),
+            $c->get(PackageCatalog::class),
+            $c->get(AtomicWriter::class),
+            Yii::getAlias($params['artifacts']['mergePlan']),
+            $rootConfigPlugin,
+        );
+    });
+
     $container->setSingleton(ConfigCompiler::class, static fn(Container $c): ConfigCompiler
         => new ConfigCompiler(
             $c->get(ModuleRegistry::class),
@@ -101,6 +122,7 @@ return function (Container $container): void {
             $c->get(AtomicWriter::class),
             $c->get(ArtifactPaths::class),
             $c->get(ViewSourcesResolver::class),
+            $c->get(MergePlanCompiler::class),
         ));
 
     // --- Зависимости -------------------------------------------------------------------------

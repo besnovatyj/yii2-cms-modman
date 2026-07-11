@@ -33,6 +33,7 @@ final class ConfigCompiler
         private readonly AtomicWriter   $writer,
         private readonly ArtifactPaths  $paths,
         private readonly ViewSourcesResolver $viewSourcesResolver,
+        private readonly MergePlanCompiler   $mergePlanCompiler,
     ) {}
 
     /**
@@ -110,6 +111,9 @@ final class ConfigCompiler
     {
         $artifacts = $this->compile();
         $this->persist($artifacts);
+        // Параллельно со старыми артефактами пишем merge-plan для движка yiisoft/config (Yii3).
+        // На cutover старые артефакты уйдут, останется план. См. /TODO_YII3_CONFIG.MD.
+        $this->mergePlanCompiler->recompile();
         return $artifacts;
     }
 

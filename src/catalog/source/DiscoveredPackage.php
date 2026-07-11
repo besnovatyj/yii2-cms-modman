@@ -19,6 +19,9 @@ final readonly class DiscoveredPackage
     /**
      * @param array<string,string> $require       зависимости composer (name => constraint)
      * @param array<string,string> $autoloadPsr4  PSR-4 префикс => относительный путь
+     * @param array<string, string|string[]> $configPlugin  `extra.config-plugin` (group => file|files),
+     *        конвенция yiisoft/config; читается modman'ом для merge-plan (плагин самого yiisoft/config
+     *        отключён). Пути относительны корня пакета.
      */
     public function __construct(
         public string     $composerName,
@@ -32,6 +35,7 @@ final readonly class DiscoveredPackage
         public ?CmsMarker $cmsMarker,
         public array      $require,
         public array      $autoloadPsr4,
+        public array      $configPlugin,
         public string     $sourceLabel,
     ) {}
 
@@ -49,6 +53,9 @@ final readonly class DiscoveredPackage
         $moduleId = (isset($extra['moduleId']) && is_string($extra['moduleId'])) ? $extra['moduleId'] : null;
 
         $psr4 = $data['autoload']['psr-4'] ?? [];
+        $configPlugin = (is_array($extra) && isset($extra['config-plugin']) && is_array($extra['config-plugin']))
+            ? $extra['config-plugin']
+            : [];
 
         // Лицензия в composer.json может быть строкой или массивом (как у старого modman PackageInfo).
         $license = '';
@@ -68,6 +75,7 @@ final readonly class DiscoveredPackage
             cmsMarker: is_array($extra) ? CmsMarker::fromExtra($extra) : null,
             require: is_array($data['require'] ?? null) ? $data['require'] : [],
             autoloadPsr4: is_array($psr4) ? $psr4 : [],
+            configPlugin: $configPlugin,
             sourceLabel: $sourceLabel,
         );
     }

@@ -37,6 +37,9 @@ return [
         // Пер-аппликационные вклады модулей (ProvidesAppConfig): appId => частичное дерево конфига.
         // Каждый main.php приложения подмешивает свой ключ через ArrayHelper::merge.
         'appConfig' => '@config-dyn-gen/appConfigFile.php',
+        // Merge-plan для движка yiisoft/config (Yii3): [env][group][package][]=file. Читается
+        // рантайм-обёрткой common\config\ConfigFactory. См. MergePlanCompiler.
+        'mergePlan' => '@config-dyn-gen/merge-plan.php',
     ],
 
     // Локации меню (location => файл/включённость). Совпадает по смыслу с конфигом старого modman.
