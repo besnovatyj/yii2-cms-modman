@@ -118,20 +118,20 @@ final class ConfigCompiler
     }
 
     /**
-     * Перекомпилировать и записать ТОЛЬКО артефакты меню — точечная операция для диагностики/обслуживания
-     * (аналог `Modman/menu/rebuild`). Прочие артефакты не трогаются.
+     * @deprecated Меню собираются в рантайме из группы `admin-menu` (yiisoft/config, {@see \Besnovatyj\Modman\menu\MenuProvider}),
+     * а не сериализуются в `menu-*.php` (замыкания `active` не переживают var_export). Метод оставлен для
+     * совместимости вызывающих (web/console «пересобрать меню») — теперь без записи артефактов меню.
      */
     public function recompileMenus(): CompiledArtifacts
     {
-        $artifacts = $this->compile();
-        foreach ($this->paths->menuLocationFiles as $location => $file) {
-            $this->writer->writeArray($file, $artifacts->menusByLocation[$location] ?? []);
-        }
-        return $artifacts;
+        return $this->compile();
     }
 
     /**
      * Записать артефакты на диск (атомарно, по одному файлу).
+     *
+     * Меню НЕ пишутся: они собираются в рантайме из группы `admin-menu` — единственные замыкания, ради
+     * которых был нужен экспорт замыканий; их сериализация упразднена вместе с exportClosure.
      */
     public function persist(CompiledArtifacts $artifacts): void
     {
@@ -142,10 +142,6 @@ final class ConfigCompiler
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
         $this->writer->writeArray($this->paths->viewSourcesConfig, $artifacts->viewSources);
         $this->writer->writeArray($this->paths->appConfigConfig, $artifacts->appConfig);
-
-        foreach ($this->paths->menuLocationFiles as $location => $file) {
-            $this->writer->writeArray($file, $artifacts->menusByLocation[$location] ?? []);
-        }
     }
 
     /**
