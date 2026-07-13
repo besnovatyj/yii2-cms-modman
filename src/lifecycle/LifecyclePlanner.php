@@ -145,7 +145,7 @@ final class LifecyclePlanner
         } catch (DependencyException $e) {
             $blockers[] = $e->getMessage();
         }
-        foreach ($this->detectConflicts($manifest, $manifest->id) as $conflict) {
+        foreach ($this->detectConflicts($manifest, $manifest->id, selfActive: true) as $conflict) {
             $blockers[] = $conflict;
         }
         foreach ($this->checkWritable($manifest) as $blocker) {
@@ -183,9 +183,15 @@ final class LifecyclePlanner
     /**
      * Конфликты имён компонентов/bootstrap: с уже управляемыми модулями и с реальным приложением.
      *
+     * @param string|null $excludeId  не учитывать этот модуль в наборе managed-вкладов (self при update).
+     * @param bool $selfActive обновляемый модуль уже АКТИВЕН — его собственные компоненты по определению
+     *        уже зарегистрированы в живом приложении (им же самим). Поэтому проверку `Yii::$app->has()`
+     *        для них пропускаем: иначе update любого модуля со своим компонентом (`shortcode`,
+     *        `authManager` и т.п.) вечно упирался бы в ложный само-конфликт. Реальные межмодульные
+     *        коллизии по-прежнему ловит проверка managedContributions (self из неё исключён).
      * @return string[]
      */
-    private function detectConflicts(ModuleManifest $manifest, ?string $excludeId = null): array
+    private function detectConflicts(ModuleManifest $manifest, ?string $excludeId = null, bool $selfActive = false): array
     {
         $conflicts = [];
 
@@ -194,7 +200,7 @@ final class LifecyclePlanner
         foreach (array_keys($manifest->contributions->components) as $name) {
             if (isset($components[$name])) {
                 $conflicts[] = "Компонент '{$name}' уже регистрируется модулем '{$components[$name]}'.";
-            } elseif (Yii::$app->has($name)) {
+            } elseif (!$selfActive && Yii::$app->has($name)) {
                 $conflicts[] = "Компонент '{$name}' уже зарегистрирован в приложении.";
             }
         }

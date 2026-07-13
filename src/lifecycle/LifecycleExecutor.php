@@ -63,7 +63,7 @@ final class LifecycleExecutor
                 $commit($context);              // commit-at-end
                 $this->compiler->recompile();   // производная проекция (в т.ч. manifest источников представлений)
 
-                $this->logReport($context, "✔ Операция «{$context->type->value}» над '{$context->moduleId}' завершена.");
+                Yii::info("✔ Операция «{$context->type->value}» над '{$context->moduleId}' завершена.", 'modman/lifecycle');
             } catch (Throwable $e) {
                 Yii::error("Операция {$context->type->value} над '{$context->moduleId}' прервана: {$e->getMessage()}", 'modman/lifecycle');
                 $context->report->error($e->getMessage());
@@ -78,30 +78,12 @@ final class LifecycleExecutor
 
                 $this->safeRecompile($context);
 
-                $this->logReport($context, "✖ Операция «{$context->type->value}» над '{$context->moduleId}' откачена.");
+                Yii::warning("✖ Операция «{$context->type->value}» над '{$context->moduleId}' откачена.", 'modman/lifecycle');
             }
         });
-    }
-
-    /**
-     * Выгружает накопленный {@see OperationReport} в канал лога `modman/*` — чтобы детальный отчёт
-     * (созданные/удалённые директории, сводка миграций, предупреждения и ошибки) лёг в файл модуля,
-     * а не остался только во flash. Уровень сообщения соответствует его роли.
-     */
-    private function logReport(OperationContext $context, string $header): void
-    {
-        $report = $context->report;
-        Yii::info($header, 'modman/lifecycle');
-
-        foreach ($report->infos() as $message) {
-            Yii::info("[{$context->moduleId}] {$message}", 'modman/lifecycle');
-        }
-        foreach ($report->warnings() as $message) {
-            Yii::warning("[{$context->moduleId}] {$message}", 'modman/lifecycle');
-        }
-        foreach ($report->errors() as $message) {
-            Yii::error("[{$context->moduleId}] {$message}", 'modman/lifecycle');
-        }
+        // Полную сводку отчёта (infos/warnings/errors) в канал `modman/*` выгружает фасад
+        // {@see \Besnovatyj\Modman\ModuleManager} — единой точкой для ВСЕХ операций, включая те, что
+        // не дошли до executor'а (блокеры плана: «модуль не установлен», конфликт компонентов и т.п.).
     }
 
     /**

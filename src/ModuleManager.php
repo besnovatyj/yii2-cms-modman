@@ -66,26 +66,26 @@ final class ModuleManager
     {
         $report = $this->installHandler->install($moduleId);
         $this->catalog->refresh();
-        return $report;
+        return $this->logReport($report);
     }
 
     public function uninstall(string $moduleId): OperationReport
     {
         $report = $this->uninstallHandler->uninstall($moduleId);
         $this->catalog->refresh();
-        return $report;
+        return $this->logReport($report);
     }
 
     public function update(string $moduleId): OperationReport
     {
         $report = $this->updateHandler->update($moduleId);
         $this->catalog->refresh();
-        return $report;
+        return $this->logReport($report);
     }
 
     public function reconcile(): OperationReport
     {
-        return $this->reconcileHandler->reconcileAll();
+        return $this->logReport($this->reconcileHandler->reconcileAll());
     }
 
     /**
@@ -100,6 +100,35 @@ final class ModuleManager
     {
         $report = $this->syncHandler->sync($adoptAll);
         $this->catalog->refresh();
+        return $this->logReport($report);
+    }
+
+    /**
+     * Выгружает итог операции в канал лога `modman/*` — единая точка для ВСЕХ операций менеджера,
+     * включая аборты на этапе плана (блокеры), которые не доходят до {@see LifecycleExecutor} и раньше
+     * не логировались вовсе (ошибка была видна только во flash/модалке). Шаги пишет сам executor в
+     * реальном времени; здесь — заголовок с исходом и сводка infos/warnings/errors.
+     */
+    private function logReport(OperationReport $report): OperationReport
+    {
+        $label = $report->moduleId !== '' ? "{$report->type->value} '{$report->moduleId}'" : $report->type->value;
+
+        if ($report->isSuccessful()) {
+            Yii::info("✔ Операция «{$label}» — успех.", 'modman/lifecycle');
+        } else {
+            Yii::error("✖ Операция «{$label}» — не выполнена.", 'modman/lifecycle');
+        }
+
+        foreach ($report->infos() as $message) {
+            Yii::info("[{$report->moduleId}] {$message}", 'modman/lifecycle');
+        }
+        foreach ($report->warnings() as $message) {
+            Yii::warning("[{$report->moduleId}] {$message}", 'modman/lifecycle');
+        }
+        foreach ($report->errors() as $message) {
+            Yii::error("[{$report->moduleId}] {$message}", 'modman/lifecycle');
+        }
+
         return $report;
     }
 
