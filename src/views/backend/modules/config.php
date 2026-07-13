@@ -72,6 +72,9 @@ $json = is_array($assembled)
                     </ul>
                     <div class="card-footer text-muted small">
                         Порядок = порядок слияния (<code>vendor</code> раньше, <code>root</code> ядра — последним).
+                        Группы <code>app-*</code> композитны — включают группу <code>common</code> (ссылка
+                        <code>$common</code> развёрнута), поэтому здесь видны и её вкладчики (например,
+                        <code>shortcode</code>, <code>authManager</code>).
                     </div>
                 </div>
             </div>

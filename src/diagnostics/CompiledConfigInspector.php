@@ -59,14 +59,43 @@ final class CompiledConfigInspector
     }
 
     /**
-     * «Кто вкладывает» в группу: package => список файлов, в порядке слияния (как в merge-plan).
+     * «Кто вкладывает» в группу: package => список файлов, в порядке слияния.
      *
+     * Разворачивает ссылки на другие группы (`$common` и т.п.): app-группы КОМПОЗИТНЫ — у root-пакета
+     * первым идёт `$common`, т.е. в `app-backend`/`app-frontend` вливается вся группа `common` (а с ней
+     * и компоненты вроде `shortcode`, `authManager`), а уже потом app-специфичные файлы. Без разворота
+     * список «кто вложил» не сходился бы с итоговым конфигом. Рекурсия защищена от циклов.
+     *
+     * @param array<string,true> $seen внутренний guard от циклов ссылок
      * @return array<string, string[]>
      */
-    public function contributors(string $group): array
+    public function contributors(string $group, array $seen = []): array
     {
-        $plan = $this->mergePlan();
-        return $plan[$this->env][$group] ?? [];
+        if (isset($seen[$group])) {
+            return [];
+        }
+        $seen[$group] = true;
+
+        $raw = $this->mergePlan()[$this->env][$group] ?? [];
+        $out = [];
+        foreach ($raw as $package => $files) {
+            foreach ($files as $file) {
+                if (is_string($file) && str_starts_with($file, '$')) {
+                    // Ссылка на другую группу — вливаем её вкладчиков сюда же.
+                    foreach ($this->contributors(substr($file, 1), $seen) as $refPackage => $refFiles) {
+                        foreach ($refFiles as $refFile) {
+                            $out[$refPackage][] = $refFile;
+                        }
+                    }
+                } else {
+                    $out[$package][] = $file;
+                }
+            }
+        }
+        foreach ($out as $package => $files) {
+            $out[$package] = array_values(array_unique($files));
+        }
+        return $out;
     }
 
     /**
