@@ -104,7 +104,7 @@ final class ManifestFactory
         $config = $class::moduleConfig();
         $iconClass = (string)($config['params']['iconClass'] ?? '');
 
-        $version = new Version($class::moduleVersion());
+        $version = $this->resolveVersion($package, $class);
         $requirements = $this->implementsContract($class, ProvidesDependencies::class)
             ? Requirements::fromArray($class::dependencies())
             : Requirements::empty();
@@ -135,6 +135,36 @@ final class ManifestFactory
             path: $package->path,
             checksum: $this->checksum($package, $class, $id, $version, $requirements, $contributions),
         );
+    }
+
+    /**
+     * Версия установленного на диске кода — авторитетный источник composer, а НЕ ручная константа.
+     *
+     * Приоритет:
+     *  1. `composer` version из installed.json (реальный git-тег, например `v1.1.4`) — не дрейфует,
+     *     обновляется автоматически при `composer update`; смена тега меняет checksum → «обновление»
+     *     флагается само;
+     *  2. если composer отдаёт dev-ветку (`dev-master` у path/symlink-репо, где тега нет) — синтетика
+     *     `0.0.0-dev+<sha7>`: semver-сравнение осмысленно деградирует (dev всегда «ниже» релиза),
+     *     а фактическую смену кода ловит checksum по reference;
+     *  3. крайний fallback — константа {@see DeclaresModule::moduleVersion()} (нужна лишь когда источник
+     *     без composer-метаданных, например голый filesystem-скан без installed.json).
+     *
+     * @param class-string $class
+     */
+    private function resolveVersion(DiscoveredPackage $package, string $class): Version
+    {
+        $composer = trim($package->composerVersion);
+
+        if ($composer !== '' && !str_starts_with($composer, 'dev-')) {
+            return new Version($composer);
+        }
+
+        if ($package->sourceReference !== '') {
+            return new Version('0.0.0-dev+' . $package->shortReference());
+        }
+
+        return new Version($class::moduleVersion());
     }
 
     private function implementsContract(string $class, string $interface): bool

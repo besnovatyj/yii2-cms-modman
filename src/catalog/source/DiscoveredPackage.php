@@ -24,6 +24,10 @@ final readonly class DiscoveredPackage
      *        отключён). Пути относительны корня пакета.
      * @param string[] $composerBootstrap классы из `extra.bootstrap` (L1 — yii2-composer выполняет их
      *        КАЖДЫЙ запрос, пока пакет установлен, вне гейта modman); нормализовано к списку.
+     * @param string $sourceReference SHA коммита из `source.reference` installed.json (есть только у
+     *        composer-источника). Точный сигнал «код на диске сменился»; для dev-версий заменяет тег.
+     * @param string $sourceUrl git-URL из `source.url` installed.json — из него выводятся owner/repo
+     *        для запроса upstream-версии к GitHub API (см. {@see githubSlug()}).
      */
     public function __construct(
         public string     $composerName,
@@ -40,6 +44,8 @@ final readonly class DiscoveredPackage
         public array      $configPlugin,
         public string     $sourceLabel,
         public array      $composerBootstrap = [],
+        public string     $sourceReference = '',
+        public string     $sourceUrl = '',
     ) {}
 
     /**
@@ -74,6 +80,9 @@ final readonly class DiscoveredPackage
                 : (is_string($extra['bootstrap']) ? [$extra['bootstrap']] : []);
         }
 
+        // `source` есть только в installed.json (composer-источник); в сыром compos.json пакета — нет.
+        $source = is_array($data['source'] ?? null) ? $data['source'] : [];
+
         return new self(
             composerName: $data['name'],
             description: (string)($data['description'] ?? ''),
@@ -89,7 +98,35 @@ final readonly class DiscoveredPackage
             configPlugin: $configPlugin,
             sourceLabel: $sourceLabel,
             composerBootstrap: $composerBootstrap,
+            sourceReference: (string)($source['reference'] ?? ''),
+            sourceUrl: (string)($source['url'] ?? ''),
         );
+    }
+
+    /**
+     * Короткий (7 символов) SHA коммита установленного кода — для отображения dev-версий.
+     */
+    public function shortReference(): string
+    {
+        return $this->sourceReference === '' ? '' : substr($this->sourceReference, 0, 7);
+    }
+
+    /**
+     * Выводит `owner/repo` из git-URL источника (`source.url`), понимая https и scp-подобный ssh:
+     *   https://github.com/besnovatyj/yii2-cms-shop.git → besnovatyj/yii2-cms-shop
+     *   git@github.com:besnovatyj/yii2-cms-shop.git     → besnovatyj/yii2-cms-shop
+     *
+     * @return string|null null, если это не GitHub-URL (upstream-проверка неприменима)
+     */
+    public function githubSlug(): ?string
+    {
+        if ($this->sourceUrl === '' || !str_contains($this->sourceUrl, 'github.com')) {
+            return null;
+        }
+        if (preg_match('~github\.com[:/]+([^/]+)/(.+?)(?:\.git)?/?$~i', $this->sourceUrl, $m) !== 1) {
+            return null;
+        }
+        return "{$m[1]}/{$m[2]}";
     }
 
     /**
