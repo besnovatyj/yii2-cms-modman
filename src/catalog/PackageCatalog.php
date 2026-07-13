@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Besnovatyj\Modman\catalog;
 
+use Besnovatyj\Modman\catalog\check\ModuleWarningCheck;
 use Besnovatyj\Modman\catalog\exception\ManifestException;
 use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
 use Besnovatyj\Modman\catalog\source\ModuleSource;
@@ -30,16 +31,21 @@ final class PackageCatalog
     /** @var InvalidModule[]|null CMS-модули с ошибкой конфигурации (показываются строкой с причиной) */
     private ?array $invalids = null;
 
+    /** @var array<string, WarningModule>|null moduleId => предупреждения валидных модулей (не блокируют) */
+    private ?array $moduleWarnings = null;
+
     /** @var string[] инфраструктурные предупреждения источников (директория не найдена и т.п.) */
     private array $sourceWarnings = [];
 
     /**
-     * @param ModuleSource[]  $sources порядок важен: при дубликате moduleId побеждает первый источник
-     * @param ManifestFactory $factory
+     * @param ModuleSource[]      $sources       порядок важен: при дубликате moduleId побеждает первый источник
+     * @param ManifestFactory     $factory
+     * @param ModuleWarningCheck[] $warningChecks не-блокирующие проверки валидных модулей (расширяемый список)
      */
     public function __construct(
         private readonly array           $sources,
         private readonly ManifestFactory $factory,
+        private readonly array           $warningChecks = [],
     ) {}
 
     /**
@@ -78,6 +84,28 @@ final class PackageCatalog
     }
 
     /**
+     * Предупреждения валидных модулей (сработавшие {@see ModuleWarningCheck}) — показываются строкой
+     * цветом warning, установку/интеграцию НЕ блокируют.
+     *
+     * @return array<string, WarningModule> ключ — moduleId
+     */
+    public function moduleWarnings(): array
+    {
+        $this->load();
+        return $this->moduleWarnings;
+    }
+
+    /**
+     * Тексты предупреждений конкретного модуля (пустой массив, если проверок не сработало).
+     *
+     * @return string[]
+     */
+    public function warningsFor(string $moduleId): array
+    {
+        return $this->moduleWarnings()[$moduleId]->warnings ?? [];
+    }
+
+    /**
      * Инфраструктурные предупреждения источников (для показа пользователю flash'ем).
      *
      * Сюда попадают только реально требующие внимания вещи уровня discovery (директория сканирования
@@ -100,6 +128,7 @@ final class PackageCatalog
         $this->manifests = null;
         $this->packages = null;
         $this->invalids = null;
+        $this->moduleWarnings = null;
         $this->sourceWarnings = [];
     }
 
@@ -112,6 +141,7 @@ final class PackageCatalog
         $manifests = [];
         $packages = [];
         $this->invalids = [];
+        $this->moduleWarnings = [];
         $seenModuleIds = [];
         $seenPackages = [];
 
@@ -155,6 +185,7 @@ final class PackageCatalog
 
                 $manifests[$manifest->id] = $manifest;
                 $seenModuleIds[$manifest->id] = $package->composerName;
+                $this->runWarningChecks($package, $manifest);
             }
 
             foreach ($source->warnings() as $warning) {
@@ -166,6 +197,29 @@ final class PackageCatalog
 
         $this->manifests = $manifests;
         $this->packages = $packages;
+    }
+
+    /**
+     * Прогоняет не-блокирующие проверки по валидному модулю: запись для UI (строки цветом warning
+     * рядом с модулем) + след в логе. Симметрично {@see addInvalid()}, но без погашенной кнопки.
+     */
+    private function runWarningChecks(DiscoveredPackage $package, ModuleManifest $manifest): void
+    {
+        $messages = [];
+        foreach ($this->warningChecks as $check) {
+            $message = $check->check($package, $manifest);
+            if ($message !== null) {
+                $messages[] = $message;
+                Yii::warning("{$package->composerName}: {$message}", 'modman/discovery');
+            }
+        }
+        if ($messages !== []) {
+            $this->moduleWarnings[$manifest->id] = new WarningModule(
+                package: $package->composerName,
+                moduleId: $manifest->id,
+                warnings: $messages,
+            );
+        }
     }
 
     /**

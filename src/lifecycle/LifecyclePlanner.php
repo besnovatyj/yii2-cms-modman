@@ -36,7 +36,9 @@ final class LifecyclePlanner
     public function planInstall(ModuleManifest $manifest): LifecyclePlan
     {
         $blockers = [];
-        $warnings = [];
+        // Не-блокирующие предупреждения discovery (например, L1-bootstrap вне гейта) — чтобы их было
+        // видно и в плане операции, а не только строкой в списке модулей.
+        $warnings = $this->catalog->warningsFor($manifest->id);
 
         if ($this->registry->isInstalled($manifest->id)) {
             $blockers[] = "Модуль '{$manifest->id}' уже установлен.";
@@ -125,7 +127,8 @@ final class LifecyclePlanner
     public function planUpdate(ModuleManifest $manifest): LifecyclePlan
     {
         $blockers = [];
-        $warnings = [];
+        // Паритет с planInstall: предупреждения discovery видны и в плане обновления.
+        $warnings = $this->catalog->warningsFor($manifest->id);
         $state = $this->registry->get($manifest->id);
 
         if ($state === null || !$state->status->isActive()) {

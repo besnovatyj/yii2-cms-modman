@@ -143,6 +143,9 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                 <?php if ($m->invalid && $m->invalidReason !== null): ?>
                                     <div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i><?= Html::encode($m->invalidReason) ?></div>
                                 <?php endif; ?>
+                                <?php foreach ($m->warnings as $warning): ?>
+                                    <div class="text-warning-emphasis small"><i class="bi bi-exclamation-circle me-1"></i><?= Html::encode($warning) ?></div>
+                                <?php endforeach; ?>
                             </td>
                             <td class="text-muted small"><?= Html::encode($m->package) ?></td>
                             <td>
@@ -152,6 +155,9 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                 <?php endif; ?>
                                 <?php if ($m->orphan): ?>
                                     <span class="badge text-bg-dark" title="Пакет не найден в каталоге">orphan</span>
+                                <?php endif; ?>
+                                <?php if ($m->warnings !== []): ?>
+                                    <span class="badge text-bg-warning" title="<?= Html::encode(implode("\n", $m->warnings)) ?>">предупреждение</span>
                                 <?php endif; ?>
                                 <?php if ($m->hasUpdate): ?>
                                     <span class="badge text-bg-info">обновление</span>

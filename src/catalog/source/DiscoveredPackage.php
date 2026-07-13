@@ -22,6 +22,8 @@ final readonly class DiscoveredPackage
      * @param array<string, string|string[]> $configPlugin  `extra.config-plugin` (group => file|files),
      *        конвенция yiisoft/config; читается modman'ом для merge-plan (плагин самого yiisoft/config
      *        отключён). Пути относительны корня пакета.
+     * @param string[] $composerBootstrap классы из `extra.bootstrap` (L1 — yii2-composer выполняет их
+     *        КАЖДЫЙ запрос, пока пакет установлен, вне гейта modman); нормализовано к списку.
      */
     public function __construct(
         public string     $composerName,
@@ -37,6 +39,7 @@ final readonly class DiscoveredPackage
         public array      $autoloadPsr4,
         public array      $configPlugin,
         public string     $sourceLabel,
+        public array      $composerBootstrap = [],
     ) {}
 
     /**
@@ -63,6 +66,14 @@ final readonly class DiscoveredPackage
             $license = is_array($data['license']) ? implode(', ', $data['license']) : (string)$data['license'];
         }
 
+        // `extra.bootstrap` (L1) по конвенции yii2-composer — строка или список классов.
+        $composerBootstrap = [];
+        if (is_array($extra) && isset($extra['bootstrap'])) {
+            $composerBootstrap = is_array($extra['bootstrap'])
+                ? array_values(array_filter($extra['bootstrap'], 'is_string'))
+                : (is_string($extra['bootstrap']) ? [$extra['bootstrap']] : []);
+        }
+
         return new self(
             composerName: $data['name'],
             description: (string)($data['description'] ?? ''),
@@ -77,6 +88,7 @@ final readonly class DiscoveredPackage
             autoloadPsr4: is_array($psr4) ? $psr4 : [],
             configPlugin: $configPlugin,
             sourceLabel: $sourceLabel,
+            composerBootstrap: $composerBootstrap,
         );
     }
 

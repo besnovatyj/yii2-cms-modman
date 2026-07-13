@@ -144,6 +144,7 @@ final class ModuleManager
                 iconClass: $manifest->iconClass,
                 hasOptions: $manifest->contributions->options !== [],
                 system: $systemActive,
+                warnings: $this->catalog->warningsFor($id),
             );
         }
 

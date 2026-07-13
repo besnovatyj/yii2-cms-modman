@@ -78,6 +78,9 @@ final class ModulesController extends Controller
             if ($m->invalid && $m->invalidReason !== null) {
                 $this->stdout("  ↳ {$m->invalidReason}\n", Console::FG_YELLOW);
             }
+            foreach ($m->warnings as $warning) {
+                $this->stdout("  ⚠ {$warning}\n", Console::FG_YELLOW);
+            }
         }
         return ExitCode::OK;
     }

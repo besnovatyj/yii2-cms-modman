@@ -51,4 +51,9 @@ return [
 
     // Путь для файлового мьютекса lifecycle-операций.
     'mutexPath' => '@runtime/modman_mutex',
+
+    // Module-пакеты, которым L1-bootstrap (extra.bootstrap) разрешён осознанно — без предупреждения
+    // WarningModule. Единственный легитимный кейс: логика, обязанная жить вне гейта modman
+    // (например, подписка на фазы lifecycle самого менеджера). См. catalog/check/L1BootstrapCheck.
+    'l1BootstrapAllowlist' => [],
 ];

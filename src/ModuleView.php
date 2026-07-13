@@ -14,10 +14,14 @@ namespace Besnovatyj\Modman;
  * Несёт три «особых» признака помимо обычного статуса: {@see $system} (системный модуль, например
  * сам менеджер — управлять им из админки нельзя, кнопок install/uninstall нет), {@see $orphan}
  * (запись реестра без пакета) и {@see $invalid} (CMS-модуль с ошибкой конфигурации — показывается
- * с причиной и погашенной кнопкой установки).
+ * с причиной и погашенной кнопкой установки). Плюс {@see $warnings} — не-блокирующие предупреждения
+ * валидного модуля (цвет warning; invalid/failed — danger), см. {@see catalog\WarningModule}.
  */
 final readonly class ModuleView
 {
+    /**
+     * @param string[] $warnings
+     */
     public function __construct(
         public string  $id,
         public string  $package,
@@ -33,5 +37,6 @@ final readonly class ModuleView
         public bool    $orphan = false,
         public bool    $invalid = false,
         public ?string $invalidReason = null,
+        public array   $warnings = [],
     ) {}
 }

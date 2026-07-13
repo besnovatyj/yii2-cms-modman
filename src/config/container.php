@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 use Besnovatyj\Helpers\ArrayExportHelper;
+use Besnovatyj\Modman\catalog\check\L1BootstrapCheck;
 use Besnovatyj\Modman\catalog\ManifestFactory;
 use Besnovatyj\Modman\catalog\PackageCatalog;
 use Besnovatyj\Modman\catalog\source\ComposerInstalledModuleSource;
@@ -75,6 +76,10 @@ return function (Container $container): void {
                 new ComposerInstalledModuleSource(),
             ],
             factory: $c->get(ManifestFactory::class),
+            // Не-блокирующие проверки конвенций (WarningModule); расширение — добавить класс в список.
+            warningChecks: [
+                new L1BootstrapCheck($params['l1BootstrapAllowlist'] ?? []),
+            ],
         ));
 
     // --- Компилятор --------------------------------------------------------------------------
