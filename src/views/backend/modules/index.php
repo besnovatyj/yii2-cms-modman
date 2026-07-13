@@ -152,10 +152,12 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                     <?php foreach ($modules as $m): ?>
                         <tr class="<?= $m->invalid ? 'table-warning' : '' ?>">
                             <td>
-                                <?php if ($m->iconClass !== ''): ?>
-                                    <i class="<?= Html::encode($m->iconClass) ?> me-1"></i>
-                                <?php endif; ?>
-                                <code><?= Html::encode($m->id) ?></code>
+                                <span class="text-nowrap">
+                                    <?php if ($m->iconClass !== ''): ?>
+                                        <i class="<?= Html::encode($m->iconClass) ?> me-1"></i>
+                                    <?php endif; ?>
+                                    <code><?= Html::encode($m->id) ?></code>
+                                </span>
                                 <?php if ($m->invalid && $m->invalidReason !== null): ?>
                                     <div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i><?= Html::encode($m->invalidReason) ?></div>
                                 <?php endif; ?>
