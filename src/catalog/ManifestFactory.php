@@ -134,6 +134,7 @@ final class ManifestFactory
             contributions: $contributions,
             path: $package->path,
             checksum: $this->checksum($package, $class, $id, $version, $requirements, $contributions),
+            sourceUrl: $package->sourceUrl,
         );
     }
 

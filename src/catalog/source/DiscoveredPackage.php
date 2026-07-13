@@ -112,21 +112,13 @@ final readonly class DiscoveredPackage
     }
 
     /**
-     * Выводит `owner/repo` из git-URL источника (`source.url`), понимая https и scp-подобный ssh:
-     *   https://github.com/besnovatyj/yii2-cms-shop.git → besnovatyj/yii2-cms-shop
-     *   git@github.com:besnovatyj/yii2-cms-shop.git     → besnovatyj/yii2-cms-shop
+     * `owner/repo` из git-URL источника (`source.url`) — для запроса upstream-версии к GitHub API.
      *
      * @return string|null null, если это не GitHub-URL (upstream-проверка неприменима)
      */
     public function githubSlug(): ?string
     {
-        if ($this->sourceUrl === '' || !str_contains($this->sourceUrl, 'github.com')) {
-            return null;
-        }
-        if (preg_match('~github\.com[:/]+([^/]+)/(.+?)(?:\.git)?/?$~i', $this->sourceUrl, $m) !== 1) {
-            return null;
-        }
-        return "{$m[1]}/{$m[2]}";
+        return \Besnovatyj\Modman\upstream\GitHubSlug::fromUrl($this->sourceUrl);
     }
 
     /**

@@ -67,7 +67,31 @@ final class ModulesController extends Controller
             'dataProvider' => $search->moduleDataProvider($this->manager->modules()),
             'packages' => $search->filterPackages($this->manager->packages()),
             'pending' => $this->manager->pending(),
+            'hasToken' => $this->githubToken() !== '',
         ]);
+    }
+
+    /**
+     * HTMX-фрагмент: последняя доступная версия модуля на GitHub (кнопка «проверить» в списке).
+     *
+     * Вынесено в отдельный запрос НАМЕРЕННО: сеть дёргается только по клику и только по одному модулю,
+     * поэтому без токена страница не упирается в лимит GitHub при обычной загрузке. `force` (кнопка
+     * «обновить») минует кэш.
+     */
+    public function actionUpstream(string $moduleId, int $force = 0): string
+    {
+        $check = $this->manager->checkUpstream($moduleId, $this->githubToken(), $force === 1);
+
+        return $this->renderPartial('_upstream', ['check' => $check]);
+    }
+
+    /**
+     * GitHub-токен из настроек модуля (опция `modman_github_token` модуля конфигурации). Пусто —
+     * анонимные запросы. modman не зависит жёстко от модуля конфигурации: нет значения → нет токена.
+     */
+    private function githubToken(): string
+    {
+        return trim((string)($this->module->params['githubToken'] ?? ''));
     }
 
     public function actionCheck(string $moduleId, string $op = ''): string

@@ -12,6 +12,7 @@ use Besnovatyj\Kernel\module\CmsModule;
 use Besnovatyj\Contracts\module\DeclaresModule;
 use Besnovatyj\Contracts\module\ProvidesAdminMenu;
 use Besnovatyj\Contracts\module\ProvidesLogChannels;
+use Besnovatyj\Contracts\module\ProvidesOptions;
 use Yii;
 
 /**
@@ -31,7 +32,7 @@ use Yii;
  * `Besnovatyj\Modman\controllers`, путь `backend/modules` резолвится в controllers\backend\ModulesController).
  * Console-маршруты: `Modman/modules/...` (controllerNamespace переключается на commands).
  */
-final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMenu, ProvidesLogChannels
+final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMenu, ProvidesLogChannels, ProvidesOptions
 {
     /** Версия менеджера — источник истины для отображения и будущего самообновления. */
     public const string VERSION = '1.0.0';
@@ -79,5 +80,15 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMen
     public static function logChannels(): array
     {
         return require __DIR__ . '/config/log.php';
+    }
+
+    /**
+     * Опции менеджера (модуль конфигурации `yii2-cms-config`). Пока единственная — GitHub-токен для
+     * проверки upstream-версий: без него лимит анонимных запросов 60/час, с ним 5000/час.
+     * Опция необязательна: не задан токен — работает режим «проверка по кнопке».
+     */
+    public static function options(): array
+    {
+        return require __DIR__ . '/config/options.php';
     }
 }

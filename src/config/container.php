@@ -38,6 +38,7 @@ use Besnovatyj\Modman\migration\ModuleMigrationRunner;
 use Besnovatyj\Modman\migration\StandardMigrationHistory;
 use Besnovatyj\Modman\ModuleManager;
 use Besnovatyj\Modman\registry\ModuleRegistry;
+use Besnovatyj\Modman\upstream\GitHubTagFetcher;
 use yii\di\Container;
 use yii\mutex\FileMutex;
 
@@ -210,6 +211,15 @@ return function (Container $container): void {
             $c->get(LifecycleLock::class),
         ));
 
+    // --- Upstream-версии (GitHub) ------------------------------------------------------------
+    // Кэш ответов — в компоненте `cache` приложения (apcu), если он есть; иначе фетчер работает без кэша.
+    $container->setSingleton(GitHubTagFetcher::class, static fn(): GitHubTagFetcher => new GitHubTagFetcher(
+        cache: Yii::$app->has('cache') ? Yii::$app->get('cache') : null,
+        ttl: (int)($params['upstream']['ttl'] ?? 3600),
+        errorTtl: (int)($params['upstream']['errorTtl'] ?? 300),
+        timeout: (int)($params['upstream']['timeout'] ?? 5),
+    ));
+
     // --- Фасад -------------------------------------------------------------------------------
     $container->setSingleton(ModuleManager::class, static fn(Container $c): ModuleManager
         => new ModuleManager(
@@ -222,5 +232,6 @@ return function (Container $container): void {
             $c->get(ReconcileHandler::class),
             $c->get(SyncHandler::class),
             $c->get(ConfigCompiler::class),
+            $c->get(GitHubTagFetcher::class),
         ));
 };

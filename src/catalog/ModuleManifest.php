@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Besnovatyj\Modman\catalog;
 
 use Besnovatyj\Modman\registry\Version;
+use Besnovatyj\Modman\upstream\GitHubSlug;
 
 /**
  * Единый неизменяемый носитель метаданных пакета-модуля.
@@ -32,6 +33,7 @@ final readonly class ModuleManifest
      * @param Contributions  $contributions вклады в приложение
      * @param string         $path         абсолютный путь к директории пакета
      * @param string         $checksum     контрольная сумма манифеста (фиксируется в реестре)
+     * @param string         $sourceUrl    git-URL источника (`source.url` installed.json) — для upstream-проверки
      */
     public function __construct(
         public string        $id,
@@ -45,7 +47,16 @@ final readonly class ModuleManifest
         public Contributions $contributions,
         public string        $path,
         public string        $checksum,
+        public string        $sourceUrl = '',
     ) {}
+
+    /**
+     * `owner/repo` пакета на GitHub (из {@see $sourceUrl}) — для запроса последней версии к API.
+     */
+    public function githubSlug(): ?string
+    {
+        return GitHubSlug::fromUrl($this->sourceUrl);
+    }
 
     /**
      * Конфигурация модуля для записи в артефакт `modules`: класс + базовый конфиг + версия.

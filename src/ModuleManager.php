@@ -23,6 +23,9 @@ use Besnovatyj\Modman\lifecycle\plan\LifecyclePlan;
 use Besnovatyj\Modman\registry\ModuleRegistry;
 use Besnovatyj\Modman\registry\ModuleState;
 use Besnovatyj\Modman\registry\ModuleStatus;
+use Besnovatyj\Modman\upstream\GitHubTagFetcher;
+use Besnovatyj\Modman\upstream\UpstreamCheck;
+use Besnovatyj\Modman\upstream\UpstreamVersion;
 use Yii;
 
 /**
@@ -43,6 +46,7 @@ final class ModuleManager
         private readonly ReconcileHandler  $reconcileHandler,
         private readonly SyncHandler       $syncHandler,
         private readonly ConfigCompiler    $compiler,
+        private readonly GitHubTagFetcher  $upstreamFetcher,
     ) {}
 
     public function check(string $moduleId): LifecyclePlan
@@ -183,6 +187,39 @@ final class ModuleManager
 
         usort($views, static fn(ModuleView $a, ModuleView $b): int => strcmp($a->id, $b->id));
         return $views;
+    }
+
+    /**
+     * Проверить последнюю доступную версию модуля на GitHub и сравнить с версией на диске.
+     *
+     * Сеть дёргается ТОЛЬКО здесь и только по одному модулю (кнопка в UI) — так без токена не упираемся
+     * в лимит GitHub на первой же загрузке страницы. Сравнение «новее» осмысленно лишь для реальной
+     * установленной версии; dev-версии (path/symlink-репо) сравнивать не с чем.
+     *
+     * @param string $token GitHub PAT (пусто — анонимно)
+     * @param bool   $force игнорировать кэш
+     */
+    public function checkUpstream(string $moduleId, string $token = '', bool $force = false): UpstreamCheck
+    {
+        $manifest = $this->catalog->findById($moduleId);
+        $installed = $manifest?->version->value ?? '';
+
+        if ($manifest === null) {
+            return new UpstreamCheck($moduleId, $installed, new UpstreamVersion('', error: 'Модуль не найден в каталоге.'), false);
+        }
+
+        $slug = $manifest->githubSlug();
+        if ($slug === null) {
+            return new UpstreamCheck($moduleId, $installed, new UpstreamVersion('', error: 'У пакета нет GitHub-репозитория.'), false);
+        }
+
+        $upstream = $this->upstreamFetcher->fetch($slug, $token, $force);
+
+        $isNewer = $upstream->latestTag !== null
+            && !str_contains($installed, '-dev+')
+            && version_compare(ltrim($upstream->latestTag, 'vV'), ltrim($installed, 'vV'), '>');
+
+        return new UpstreamCheck($moduleId, $installed, $upstream, $isNewer);
     }
 
     /**

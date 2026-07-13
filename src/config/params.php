@@ -56,4 +56,11 @@ return [
     // WarningModule. Единственный легитимный кейс: логика, обязанная жить вне гейта modman
     // (например, подписка на фазы lifecycle самого менеджера). См. catalog/check/L1BootstrapCheck.
     'l1BootstrapAllowlist' => [],
+
+    // Проверка последней версии пакета на GitHub (см. upstream/GitHubTagFetcher).
+    'upstream' => [
+        'ttl'      => 3600, // кэш успешного ответа, сек
+        'errorTtl' => 300,  // кэш ошибки/лимита, сек
+        'timeout'  => 5,    // таймаут HTTP-запроса, сек
+    ],
 ];

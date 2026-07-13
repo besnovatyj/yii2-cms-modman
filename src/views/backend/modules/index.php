@@ -12,12 +12,14 @@ declare(strict_types=1);
  * @var yii\data\ArrayDataProvider $dataProvider
  * @var Besnovatyj\Modman\catalog\source\DiscoveredPackage[] $packages
  * @var array<string, Besnovatyj\Modman\registry\ModuleState> $pending
+ * @var bool $hasToken задан ли GitHub-токен (влияет на авто-проверку upstream-версий)
  */
 
 use Besnovatyj\Backend\Widgets\pagination\LinkPager;
 use Besnovatyj\Modman\forms\backend\search\ModuleSearch;
 use Besnovatyj\Modman\widgets\OperationReportModal;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 $sort = $dataProvider->getSort();
 $modules = $dataProvider->getModels();
@@ -59,12 +61,25 @@ $postButton = static function (string $action, string $moduleId, string $label, 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h1 class="h3 mb-0"><i class="bi bi-bricks me-2"></i><?= Html::encode($this->title) ?></h1>
         <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    onclick="document.body.dispatchEvent(new CustomEvent('modman-check-upstream'))"
+                    title="Запросить последние версии всех модулей на GitHub">
+                <i class="bi bi-cloud-arrow-down me-1"></i>Проверить версии
+            </button>
             <?= $postButton('recompile', '', 'Пересобрать конфиг', 'btn-outline-secondary') ?>
             <?php if ($pending !== []): ?>
                 <?= $postButton('reconcile', '', 'Сверка (' . count($pending) . ')', 'btn-warning', 'Откатить незавершённые операции к чистому состоянию?') ?>
             <?php endif; ?>
         </div>
     </div>
+
+    <?php if (!$hasToken): ?>
+        <div class="alert alert-light border small py-2">
+            <i class="bi bi-info-circle me-1"></i>GitHub-токен не задан — проверка версий по кнопке (лимит 60 запросов/час на IP).
+            Задать токен: <?= Html::a('настройки Modman', ['/Config/backend/config/index', 'category' => 'Modman']) ?> —
+            тогда версии проверяются автоматически (лимит 5000/час).
+        </div>
+    <?php endif; ?>
 
     <p class="text-muted small">
         Состояние модулей декларативно и единично; вся конфигурация приложения — производная и
@@ -128,7 +143,8 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                         <th><?= $sort->link('id', ['label' => 'ID']) ?></th>
                         <th>Пакет</th>
                         <th><?= $sort->link('status', ['label' => 'Статус']) ?></th>
-                        <th><?= $sort->link('availableVersion', ['label' => 'Версия']) ?> (доступна / установлена)</th>
+                        <th><?= $sort->link('availableVersion', ['label' => 'Версия']) ?> (на диске / интегрирована)</th>
+                        <th>Upstream (GitHub)</th>
                         <th class="text-end">Действия</th>
                     </tr>
                     </thead>
@@ -168,6 +184,22 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                                 <span class="text-muted">/</span>
                                 <?= Html::encode($m->installedVersion ?? '—') ?>
                             </td>
+                            <td>
+                                <?php if ($m->invalid || $m->orphan): ?>
+                                    <span class="text-muted">—</span>
+                                <?php else: ?>
+                                    <?php $cellId = 'upstream-' . $m->id; ?>
+                                    <div id="<?= Html::encode($cellId) ?>" class="modman-upstream">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                hx-get="<?= Html::encode(Url::to(['upstream', 'moduleId' => $m->id])) ?>"
+                                                hx-target="#<?= Html::encode($cellId) ?>"
+                                                hx-swap="innerHTML"
+                                                hx-trigger="click<?= $hasToken ? ', load' : '' ?>, modman-check-upstream from:body">
+                                            <i class="bi bi-cloud-arrow-down me-1"></i>проверить
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
                                     <?php if ($m->invalid): ?>
@@ -203,7 +235,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                         </tr>
                     <?php endforeach; ?>
                     <?php if ($modules === []): ?>
-                        <tr><td colspan="5" class="text-center text-muted py-4">Модули не найдены.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">Модули не найдены.</td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>
