@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Besnovatyj\Modman\controllers\backend;
 
+use Besnovatyj\Modman\diagnostics\CompiledConfigInspector;
 use Besnovatyj\Modman\forms\backend\search\ModuleSearch;
 use Besnovatyj\Modman\lifecycle\OperationReport;
 use Besnovatyj\Modman\lifecycle\OperationType;
@@ -32,6 +33,7 @@ final class ModulesController extends Controller
         $id,
         $module,
         private readonly ModuleManager $manager,
+        private readonly CompiledConfigInspector $configInspector,
         $config = [],
     ) {
         parent::__construct($id, $module, $config);
@@ -101,6 +103,27 @@ final class ModulesController extends Controller
             : $this->manager->check($moduleId);
 
         return $this->render('plan', ['plan' => $plan]);
+    }
+
+    /**
+     * Диагностика: итоговый собранный конфиг выбранной группы + «кто вложил» (merge-plan).
+     *
+     * Read-only. Секреты замаскированы, замыкания/объекты — метками (см. {@see CompiledConfigInspector}).
+     * Помогает найти виновника, когда модуль «залез не туда»: видно и результат, и источники вклада.
+     */
+    public function actionConfig(?string $group = null): string
+    {
+        $groups = $this->configInspector->groups();
+        $group = ($group !== null && in_array($group, $groups, true))
+            ? $group
+            : ($groups[0] ?? '');
+
+        return $this->render('config', [
+            'groups' => $groups,
+            'group' => $group,
+            'contributors' => $group !== '' ? $this->configInspector->contributors($group) : [],
+            'assembled' => $group !== '' ? $this->configInspector->assembled($group) : [],
+        ]);
     }
 
     public function actionInstall(): Response

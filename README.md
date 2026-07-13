@@ -109,7 +109,7 @@ editable-модули для голого восстановления.
 
 ```json
 "extra": {
-    "bescms": { "kind": "module" }
+"bescms": {"kind": "module"}
 }
 ```
 
@@ -149,9 +149,9 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 
 ```json
 "extra": {
-    "bescms": { "kind": "module" },
-    "moduleClass": "Besnovatyj\\Shortcode\\Module",
-    "moduleId": "Shortcode"
+"bescms": {"kind": "module"},
+"moduleClass": "Besnovatyj\\Shortcode\\Module",
+"moduleId": "Shortcode"
 }
 ```
 
@@ -170,11 +170,35 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 docker compose exec php sh -c 'find /home/node/app/packages/besnovatyj/modman/src -name "*.php" -not -path "*/.git/*" -print0 | xargs -0 -n1 -P4 php -l'
 ```
 
-## Статус
+## Описание функционала и логики
 
-Cutover на канонические пути выполнен; модуль на стадии тестирования. Прежний патч-modman сохранён как
-`app/modules/modman_b` (образец, вне автозагрузки). Остаётся:
+### Кнопка "Обновить" модуль
 
-1. Обкатать `install`/`uninstall`/`update`/`reconcile`/`sync` на реальных модулях (Фаза 11 в [plan.md](./plan.md)).
-2. Пробросить `sync` в веб-контроллёр (пока только консоль).
-3. После доверия — удалить `modman_b`.
+Это кнопка **update-lifecycle модуля в modman** — не git, не composer, не upstream-проверка. Она пересобирает интеграцию
+уже лежащего на диске кода модуля в приложение.
+
+Путь: POST → `actionUpdate` → `ModuleManager::update()` → `UpdateHandler::update()`.
+
+**Когда появляется**: только если `installed && hasUpdate`, где 
+`hasUpdate = модуль активен И (версия манифеста > версии в реестре ИЛИ checksum манифеста ≠ записанного в реестре)`. 
+То есть код на диске изменился (новый тег/новый вклад), а реестр modman ещё отражает старое состояние.
+
+**Что делает (под `LifecycleLock` + мьютексом)**:
+
+1. Пишет в реестр статус `Updating` (write-ahead intent), шлёт событие `BeforeUpdate` (на него могут реагировать другие
+   модули).
+2. Применяет **только pending-миграции** модуля — благодаря учёту владения миграциями, без `down→up`/переустановки (в
+   старом modman «обновление» = снести и поставить заново; здесь — настоящий инкрементальный апдейт).
+3. Создаёт недостающие директории модуля (`@static/...`).
+4. **Commit**: обновляет запись в реестре — новая `version`, новый `checksum`, `updatedAt = now`, список применённых
+   миграций дополняется, статус → `Installed`.
+5. `LifecycleExecutor` в конце **перекомпилирует конфигурацию** (merge-plan/артефакты) из реестра.
+6. При успехе — событие `AfterUpdate` и отчёт «обновлён до vX» в модалке; при ошибке — **rollback** к прежнему
+   установленному состоянию.
+
+**Чего она НЕ делает**: не тянет новый код с GitHub и не запускает `composer update` — предполагается, что новый код уже
+на диске (composer его уже поставил). Кнопка лишь синхронизирует под него БД-миграции, директории, реестр и
+скомпилированный конфиг.
+
+Кнопка-иконка «обновить, минуя кэш» в колонке Upstream — другое: она лишь заново запрашивает последний тег с GitHub,
+ничего в системе не меняя.  

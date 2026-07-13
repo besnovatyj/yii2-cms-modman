@@ -19,6 +19,7 @@ use Besnovatyj\Modman\compiler\MergePlanCompiler;
 use Besnovatyj\Modman\compiler\MenuCompiler;
 use Besnovatyj\Modman\compiler\ViewSourcesResolver;
 use Besnovatyj\Modman\deps\DependencyResolver;
+use Besnovatyj\Modman\diagnostics\CompiledConfigInspector;
 use Besnovatyj\Modman\events\ModuleLifecycleDispatcher;
 use Besnovatyj\Modman\lifecycle\handler\CheckHandler;
 use Besnovatyj\Modman\lifecycle\handler\InstallHandler;
@@ -210,6 +211,10 @@ return function (Container $container): void {
             $c->get(ConfigCompiler::class),
             $c->get(LifecycleLock::class),
         ));
+
+    // --- Диагностика: вьювер собранного конфига ----------------------------------------------
+    $container->setSingleton(CompiledConfigInspector::class, static fn(): CompiledConfigInspector
+        => new CompiledConfigInspector(Yii::getAlias($params['artifacts']['mergePlan'])));
 
     // --- Upstream-версии (GitHub) ------------------------------------------------------------
     // Кэш ответов — в компоненте `cache` приложения (apcu), если он есть; иначе фетчер работает без кэша.

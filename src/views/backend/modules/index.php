@@ -66,6 +66,7 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                     title="Запросить последние версии всех модулей на GitHub">
                 <i class="bi bi-cloud-arrow-down me-1"></i>Проверить версии
             </button>
+            <?= Html::a('<i class="bi bi-file-earmark-code me-1"></i>Итоговый конфиг', ['config'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
             <?= $postButton('recompile', '', 'Пересобрать конфиг', 'btn-outline-secondary') ?>
             <?php if ($pending !== []): ?>
                 <?= $postButton('reconcile', '', 'Сверка (' . count($pending) . ')', 'btn-warning', 'Откатить незавершённые операции к чистому состоянию?') ?>
