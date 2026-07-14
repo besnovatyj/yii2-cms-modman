@@ -114,8 +114,13 @@ final class CompiledConfigInspector
         try {
             /** @var object $factory */
             $factory = new $factoryClass();
+            // Изолированный свежий движок (как боевой процесс «одна группа за запрос»), а НЕ прогретый
+            // статический, которым бутился app-backend: добор нескольких групп через общий движок в одном
+            // web-запросе ведёт себя иначе, чем отдельный процесс (движок держит собранные группы у себя).
             /** @var array $config */
-            $config = $factory->get($group);
+            $config = method_exists($factory, 'getIsolated')
+                ? $factory->getIsolated($group)
+                : $factory->get($group);
         } catch (Throwable $e) {
             Yii::warning("assembled('{$group}'): {$e->getMessage()}", 'modman/diagnostics');
             return 'Ошибка сборки группы: ' . $e->getMessage();
