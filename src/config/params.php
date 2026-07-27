@@ -30,6 +30,8 @@ return [
         'options' => '@config-dyn-gen/moduleOptions.php',
         // Тема-НЕзависимый манифест источников представлений (см. common params 'moduleViewSourcesFile').
         'viewSources' => '@config-dyn-gen/moduleViewSources.php',
+        // Плитки главной панели админки активных модулей (потребляется модулем `besnovatyj/yii2-cms-dashboard`).
+        'dashboardWidgets' => '@config-dyn-gen/dashboardWidgets.php',
         // Merge-plan для движка yiisoft/config (Yii3): [env][group][package][]=file. Читается
         // рантайм-обёрткой common\config\ConfigFactory. См. MergePlanCompiler.
         'mergePlan' => '@config-dyn-gen/merge-plan.php',

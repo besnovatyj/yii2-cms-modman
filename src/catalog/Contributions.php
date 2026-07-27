@@ -21,6 +21,8 @@ final readonly class Contributions
      * @param array<string, array>   $components   componentId => конфиг
      * @param array<int, string>      $bootstrap    список bootstrap-классов
      * @param array                   $adminMenu    пункты меню (формат ProvidesAdminMenu)
+     * @param array<int, \Besnovatyj\Contracts\dashboard\DashboardWidgetDescriptor> $dashboardWidgets
+     *        плитки главной панели админки (формат ProvidesDashboardWidgets)
      * @param array                   $options      опции модуля
      * @param array<string, array>    $logChannels  channelId => спека
      * @param array<int, RequiredDirectory> $directories требуемые директории
@@ -34,6 +36,7 @@ final readonly class Contributions
         public array   $components = [],
         public array   $bootstrap = [],
         public array   $adminMenu = [],
+        public array   $dashboardWidgets = [],
         public array   $options = [],
         public array   $logChannels = [],
         public array   $directories = [],

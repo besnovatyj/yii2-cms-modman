@@ -11,6 +11,7 @@ namespace Besnovatyj\Modman\catalog;
 use JsonException;
 use Besnovatyj\Modman\catalog\exception\ManifestException;
 use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
+use Besnovatyj\Contracts\dashboard\ProvidesDashboardWidgets;
 use Besnovatyj\Contracts\module\DeclaresModule;
 use Besnovatyj\Contracts\module\ProvidesAdminMenu;
 use Besnovatyj\Contracts\module\ProvidesAppConfig;
@@ -113,6 +114,7 @@ final class ManifestFactory
             components: $this->implementsContract($class, ProvidesComponents::class) ? $class::components() : [],
             bootstrap: $this->implementsContract($class, ProvidesBootstrap::class) ? array_values($class::bootstrapClasses()) : [],
             adminMenu: $this->implementsContract($class, ProvidesAdminMenu::class) ? $class::adminMenu() : [],
+            dashboardWidgets: $this->implementsContract($class, ProvidesDashboardWidgets::class) ? $class::dashboardWidgets() : [],
             options: $this->implementsContract($class, ProvidesOptions::class) ? $class::options() : [],
             logChannels: $this->implementsContract($class, ProvidesLogChannels::class) ? $class::logChannels() : [],
             directories: $this->implementsContract($class, ProvidesDirectories::class) ? $this->buildDirectories($class::directories()) : [],

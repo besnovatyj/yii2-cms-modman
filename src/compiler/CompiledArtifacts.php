@@ -21,12 +21,14 @@ final readonly class CompiledArtifacts
      * @param array<string, array>   $logChannels channelId => спека (registry-gated лог-каналы)
      * @param array<string, array>   $options     id модуля => опции
      * @param array<string, string>  $viewSources moduleId => алиасный путь views/ (+ ключ @app/views)
+     * @param array<string, array>   $dashboardWidgets widgetId => плоский дескриптор плитки главной админки
      * @param string[]               $warnings    нефатальные проблемы компиляции
      */
     public function __construct(
         public array $logChannels = [],
         public array $options = [],
         public array $viewSources = [],
+        public array $dashboardWidgets = [],
         public array $warnings = [],
     ) {}
 }

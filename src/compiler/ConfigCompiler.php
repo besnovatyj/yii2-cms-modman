@@ -46,13 +46,14 @@ final class ConfigCompiler
         $options = [];
         // Тема-НЕзависимый манифест источников представлений: корневой ключ приложения + модули.
         $viewSources = [ViewSourcesManifest::APP_VIEWS_KEY => ''];
+        $dashboardWidgets = [];
         $warnings = [];
         $compiled = [];
 
         // Системные модули (editable=false) активны ВСЕГДА (в реестре их нет, как у самого менеджера).
         foreach ($this->catalog->manifests() as $id => $manifest) {
             if (!$manifest->editable) {
-                $this->addManifest($manifest, $logChannels, $options, $viewSources, $warnings);
+                $this->addManifest($manifest, $logChannels, $options, $viewSources, $dashboardWidgets, $warnings);
                 $compiled[$id] = true;
             }
         }
@@ -69,7 +70,7 @@ final class ConfigCompiler
                 continue;
             }
 
-            $this->addManifest($manifest, $logChannels, $options, $viewSources, $warnings);
+            $this->addManifest($manifest, $logChannels, $options, $viewSources, $dashboardWidgets, $warnings);
             $compiled[$id] = true;
         }
 
@@ -77,11 +78,13 @@ final class ConfigCompiler
         ksort($logChannels);
         ksort($options);
         ksort($viewSources);
+        ksort($dashboardWidgets);
 
         return new CompiledArtifacts(
             logChannels: $logChannels,
             options: $options,
             viewSources: $viewSources,
+            dashboardWidgets: $dashboardWidgets,
             warnings: $warnings,
         );
     }
@@ -107,6 +110,7 @@ final class ConfigCompiler
         $this->writer->writeArray($this->paths->logChannelsConfig, $artifacts->logChannels);
         $this->writer->writeArray($this->paths->optionsConfig, $artifacts->options);
         $this->writer->writeArray($this->paths->viewSourcesConfig, $artifacts->viewSources);
+        $this->writer->writeArray($this->paths->dashboardWidgetsConfig, $artifacts->dashboardWidgets);
     }
 
     /**
@@ -120,6 +124,7 @@ final class ConfigCompiler
      * @param array<string, array>  $logChannels channelId => спека
      * @param array<string, array>  $options     id модуля => опции
      * @param array<string, string> $viewSources moduleId => алиасный путь views/
+     * @param array<string, array>  $dashboardWidgets widgetId => плоский дескриптор плитки
      * @param string[]              $warnings
      */
     private function addManifest(
@@ -127,6 +132,7 @@ final class ConfigCompiler
         array &$logChannels,
         array &$options,
         array &$viewSources,
+        array &$dashboardWidgets,
         array &$warnings,
     ): void {
         $id = $manifest->id;
@@ -140,6 +146,17 @@ final class ConfigCompiler
         // Опции (агрегат для модуля конфигурации).
         if ($manifest->contributions->options !== []) {
             $options[$id] = $manifest->contributions->options;
+        }
+
+        // Плитки главной панели админки (агрегат для модуля дашборда). Дескрипторы уплощаются в
+        // массивы для var_export-артефакта; конфликт id плиток — первый побеждает.
+        foreach ($manifest->contributions->dashboardWidgets as $descriptor) {
+            $widgetId = $descriptor->id;
+            if (array_key_exists($widgetId, $dashboardWidgets)) {
+                $warnings[] = "Конфликт id плитки дашборда '{$widgetId}' при компиляции модуля '{$id}' — оставлена ранее зарегистрированная.";
+                continue;
+            }
+            $dashboardWidgets[$widgetId] = $descriptor->toArray();
         }
 
         // Registry-gated лог-каналы: включаются modman'ом при активации модуля.

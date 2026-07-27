@@ -20,6 +20,7 @@ final readonly class ArtifactPaths
         public string $logChannelsConfig,
         public string $optionsConfig,
         public string $viewSourcesConfig,
+        public string $dashboardWidgetsConfig,
     ) {}
 
     /**
@@ -28,6 +29,6 @@ final readonly class ArtifactPaths
      */
     public function all(): array
     {
-        return [$this->logChannelsConfig, $this->optionsConfig, $this->viewSourcesConfig];
+        return [$this->logChannelsConfig, $this->optionsConfig, $this->viewSourcesConfig, $this->dashboardWidgetsConfig];
     }
 }
