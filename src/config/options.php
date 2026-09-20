@@ -15,7 +15,7 @@ declare(strict_types=1);
 return [
     'modman_github_token' => [
         'path'        => 'modules.Modman.params.githubToken',
-        'label'       => '[Modman] GitHub-токен для проверки версий (read-only)',
+        'label'       => 'GitHub-токен для проверки версий (read-only)',
         'description' => 'Персональный токен GitHub (classic или fine-grained, только чтение публичных '
             . 'репозиториев). Без токена лимит проверки версий — 60 запросов/час на IP, с токеном — 5000. '
             . "Yii::\$app->getModule('Modman')->params['githubToken']",
