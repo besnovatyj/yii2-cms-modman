@@ -33,9 +33,6 @@ use Yii;
  */
 final class Module extends CmsModule implements DeclaresModule, ProvidesLogChannels, ProvidesOptions
 {
-    /** Версия менеджера — источник истины для отображения и будущего самообновления. */
-    public const string VERSION = '1.0.0';
-
     /**
      * Проводка менеджера глобальная — грузится через {@see Bootstrap} (способ B) ещё до существования
      * реестра. Поэтому здесь (хук способа A из {@see CmsModule}) лишь страховка, если Bootstrap не
@@ -51,11 +48,6 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesLogChann
     public static function moduleId(): string
     {
         return 'Modman';
-    }
-
-    public static function moduleVersion(): string
-    {
-        return self::VERSION;
     }
 
     public static function moduleConfig(): array

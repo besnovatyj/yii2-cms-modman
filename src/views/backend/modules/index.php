@@ -260,7 +260,6 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                         <th>moduleId</th>
                         <th>Версия</th>
                         <th>Лицензия</th>
-                        <th>Источник</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -289,11 +288,10 @@ $postButton = static function (string $action, string $moduleId, string $label, 
                             <td><?= $p->isModule() ? '<code>' . Html::encode((string)$p->moduleId) . '</code>' : '<span class="text-muted">—</span>' ?></td>
                             <td class="small"><?= Html::encode($p->composerVersion ?: '—') ?></td>
                             <td class="small"><?= Html::encode($p->license ?: '—') ?></td>
-                            <td><span class="badge text-bg-light"><?= Html::encode($p->sourceLabel) ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if ($packages === []): ?>
-                        <tr><td colspan="7" class="text-center text-muted py-4">Пакеты не найдены.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">Пакеты не найдены.</td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>

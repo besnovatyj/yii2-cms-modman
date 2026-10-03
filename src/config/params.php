@@ -13,12 +13,6 @@ return [
     // Единый источник истины — реестр состояния (атомарный lock-файл).
     'lockFile' => '@config-dyn-gen/modules-state.php',
 
-    // Директории discovery (источник Filesystem). Composer-источник читает vendor/composer/installed.json.
-    'scanDirs' => [
-        '@root/packages/besnovatyj',
-        '@modules',
-    ],
-
     // Производные артефакты modman. Yii-конфиг приложения (modules/components/bootstrap/меню админки)
     // собирает движок yiisoft/config по merge-plan, отдельных артефактов у него нет.
     'artifacts' => [

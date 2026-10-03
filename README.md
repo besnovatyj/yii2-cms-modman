@@ -13,7 +13,7 @@
 ## Карта каталога
 
 ```
-catalog/      ModuleManifest + value-объекты, discovery (Filesystem/Composer), ManifestFactory,
+catalog/      ModuleManifest + value-объекты, discovery (composer installed.json), ManifestFactory,
               PackageCatalog, InvalidModule, маркер CmsMarker/CmsKind (extra.bescms)
 registry/     ModuleStatus, Version, ModuleState, ModuleRegistry (атомарный lock-файл — источник истины)
 compiler/     AtomicWriter, ConfigCompiler (чистая компиляция), MergePlanCompiler, ArtifactPaths,
@@ -110,7 +110,7 @@ OPcache). Recompile нужен только при изменении соста
 уже присутствующие в реестре). `sync` закрывает эту точку отказа — **без ручной правки файла и без
 ручных контрольных сумм**:
 
-- набор модулей берётся из discovery (composer + скан `packages/besnovatyj`);
+- набор модулей берётся из discovery (`vendor/composer/installed.json`);
 - применённые миграции — из БД-истории владения (`MigrationOwnershipRepository`);
 - `manifestChecksum` — пересчитывается детерминированно фабрикой манифестов.
 
@@ -155,7 +155,6 @@ use Besnovatyj\Contracts\module\ProvidesMigrations;
 final class Module extends CmsModule implements DeclaresModule, ProvidesMigrations
 {
     public static function moduleId(): string { return 'Shortcode'; }
-    public static function moduleVersion(): string { return '1.0.0'; }
     public static function isEditable(): bool { return true; }
     public static function moduleConfig(): array { return ['id' => 'Shortcode', 'params' => [...]]; }
 
@@ -174,6 +173,14 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 }
 ```
 
+> **Версия модуля — только git.** В модуле версии нет. Modman берёт её из `installed.json`: тег, по
+> которому composer поставил пакет (`v1.2.0`); для ветки — `0.0.0-dev+<sha7>` коммита. Новая версия
+> модуля = новый тег + `composer update`.
+
+> **Модули — только composer-пакеты.** Каталог видит лишь то, что установлено composer'ом; локальных
+> модулей и скана директорий нет. Новый модуль создаётся сразу в `vendor/besnovatyj/<pkg>`, пушится и
+> подключается через `composer update`.
+
 > **Размещение контрактов.** Контракты и базовый класс вынесены в отдельные пакеты
 > (`besnovatyj/yii2-cms-contracts` и `besnovatyj/yii2-cms-kernel`), поэтому модули не зависят от
 > менеджера.
@@ -186,7 +193,7 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesMigratio
 ## Проверка синтаксиса (Docker)
 
 ```
-docker compose exec php sh -c 'find /home/node/app/packages/besnovatyj/modman/src -name "*.php" -not -path "*/.git/*" -print0 | xargs -0 -n1 -P4 php -l'
+docker compose exec php sh -c 'find /home/node/app/vendor/besnovatyj/yii2-cms-modman/src -name "*.php" -print0 | xargs -0 -n1 -P4 php -l'
 ```
 
 ## Описание функционала и логики

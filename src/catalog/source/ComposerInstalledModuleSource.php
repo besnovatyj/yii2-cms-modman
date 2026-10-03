@@ -14,8 +14,9 @@ use Yii;
 /**
  * Источник обнаружения через реестр Composer (`vendor/composer/installed.json`).
  *
- * Это «продакшен-путь»: менеджер работает с тем, что реально установлено composer'ом, не завися от
- * структуры директорий. Каждый установленный пакет уже содержит type/extra/autoload в installed.json.
+ * Менеджер работает только с тем, что реально установлено composer'ом. Каждый установленный пакет уже
+ * содержит в installed.json type/extra/autoload, а также версию и `source` — по ним определяется версия
+ * модуля (git-тег или коммит, см. {@see \Besnovatyj\Modman\catalog\ManifestFactory}).
  */
 final class ComposerInstalledModuleSource implements ModuleSource
 {
@@ -28,11 +29,6 @@ final class ComposerInstalledModuleSource implements ModuleSource
     public function __construct(
         private readonly string $installedJsonPath = '@vendor/composer/installed.json',
     ) {}
-
-    public function label(): string
-    {
-        return 'composer';
-    }
 
     public function warnings(): array
     {
@@ -73,7 +69,7 @@ final class ComposerInstalledModuleSource implements ModuleSource
                     ? $this->normalizePath($baseDir . DIRECTORY_SEPARATOR . $pkg['install-path'])
                     : $baseDir;
 
-                $package = DiscoveredPackage::fromComposerArray($pkg, $installPath, $this->label());
+                $package = DiscoveredPackage::fromInstalledPackage($pkg, $installPath);
                 if ($package !== null) {
                     $result[] = $package;
                 }

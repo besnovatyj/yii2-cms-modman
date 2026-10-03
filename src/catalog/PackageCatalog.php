@@ -15,7 +15,7 @@ use Besnovatyj\Modman\catalog\source\ModuleSource;
 use Yii;
 
 /**
- * Каталог пакетов: агрегирует {@see ModuleSource}-источники, строит манифесты и кэширует результат.
+ * Каталог пакетов: читает {@see ModuleSource}, строит манифесты и кэширует результат.
  *
  * Это единственная точка discovery для всей системы. В отличие от старого modman, скан выполняется
  * один раз на запрос (ленивый кэш), а проблемные пакеты не валят список, а копятся в {@see warnings()}.
@@ -34,16 +34,16 @@ final class PackageCatalog
     /** @var array<string, WarningModule>|null moduleId => предупреждения валидных модулей (не блокируют) */
     private ?array $moduleWarnings = null;
 
-    /** @var string[] инфраструктурные предупреждения источников (директория не найдена и т.п.) */
+    /** @var string[] инфраструктурные предупреждения источника (installed.json не найден и т.п.) */
     private array $sourceWarnings = [];
 
     /**
-     * @param ModuleSource[]      $sources       порядок важен: при дубликате moduleId побеждает первый источник
+     * @param ModuleSource        $source        источник установленных пакетов
      * @param ManifestFactory     $factory
      * @param ModuleWarningCheck[] $warningChecks не-блокирующие проверки валидных модулей (расширяемый список)
      */
     public function __construct(
-        private readonly array           $sources,
+        private readonly ModuleSource    $source,
         private readonly ManifestFactory $factory,
         private readonly array           $warningChecks = [],
     ) {}
@@ -106,10 +106,10 @@ final class PackageCatalog
     }
 
     /**
-     * Инфраструктурные предупреждения источников (для показа пользователю flash'ем).
+     * Инфраструктурные предупреждения источника (для показа пользователю flash'ем).
      *
-     * Сюда попадают только реально требующие внимания вещи уровня discovery (директория сканирования
-     * не найдена, installed.json нечитаем). Проблемы отдельных модулей идут не сюда, а в
+     * Сюда попадают только реально требующие внимания вещи уровня discovery (installed.json не найден
+     * или нечитаем). Проблемы отдельных модулей идут не сюда, а в
      * {@see invalids()} (строкой в UI) и в канал лога `modman/*`.
      *
      * @return string[]
@@ -143,55 +143,42 @@ final class PackageCatalog
         $this->invalids = [];
         $this->moduleWarnings = [];
         $seenModuleIds = [];
-        $seenPackages = [];
 
-        foreach ($this->sources as $source) {
-            foreach ($source->discover() as $package) {
-                // Чужой composer-пакет (нет маркера extra.bescms) — менеджер его не показывает вовсе.
-                if (!$package->isCmsPackage()) {
-                    continue;
-                }
-
-                // Один и тот же пакет может прийти из нескольких источников (filesystem + installed.json,
-                // т.к. в dev пакеты symlink'нуты как path-репозитории). Это не дубликат — побеждает первый
-                // источник, копию тихо пропускаем (никаких предупреждений).
-                if (isset($seenPackages[$package->composerName])) {
-                    continue;
-                }
-                $seenPackages[$package->composerName] = true;
-
-                $packages[] = $package;
-
-                if (!$package->isModule()) {
-                    continue;
-                }
-
-                try {
-                    $manifest = $this->factory->fromPackage($package);
-                } catch (ManifestException $e) {
-                    $this->addInvalid($package, $e->getMessage());
-                    continue;
-                }
-
-                // Два РАЗНЫХ пакета на один moduleId — настоящий конфликт, показываем как невалидный.
-                if (isset($seenModuleIds[$manifest->id])) {
-                    $this->addInvalid(
-                        $package,
-                        sprintf("Дубликат moduleId '%s' — уже используется пакетом '%s'.", $manifest->id, $seenModuleIds[$manifest->id]),
-                        $manifest->id,
-                    );
-                    continue;
-                }
-
-                $manifests[$manifest->id] = $manifest;
-                $seenModuleIds[$manifest->id] = $package->composerName;
-                $this->runWarningChecks($package, $manifest);
+        foreach ($this->source->discover() as $package) {
+            // Чужой composer-пакет (нет маркера extra.bescms) — менеджер его не показывает вовсе.
+            if (!$package->isCmsPackage()) {
+                continue;
             }
 
-            foreach ($source->warnings() as $warning) {
-                $this->sourceWarnings[] = "[{$source->label()}] {$warning}";
+            $packages[] = $package;
+
+            if (!$package->isModule()) {
+                continue;
             }
+
+            try {
+                $manifest = $this->factory->fromPackage($package);
+            } catch (ManifestException $e) {
+                $this->addInvalid($package, $e->getMessage());
+                continue;
+            }
+
+            // Два РАЗНЫХ пакета на один moduleId — настоящий конфликт, показываем как невалидный.
+            if (isset($seenModuleIds[$manifest->id])) {
+                $this->addInvalid(
+                    $package,
+                    sprintf("Дубликат moduleId '%s' — уже используется пакетом '%s'.", $manifest->id, $seenModuleIds[$manifest->id]),
+                    $manifest->id,
+                );
+                continue;
+            }
+
+            $manifests[$manifest->id] = $manifest;
+            $seenModuleIds[$manifest->id] = $package->composerName;
+            $this->runWarningChecks($package, $manifest);
         }
+
+        $this->sourceWarnings = $this->source->warnings();
 
         ksort($manifests);
 

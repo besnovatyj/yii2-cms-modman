@@ -11,7 +11,6 @@ use Besnovatyj\Modman\catalog\check\L1BootstrapCheck;
 use Besnovatyj\Modman\catalog\ManifestFactory;
 use Besnovatyj\Modman\catalog\PackageCatalog;
 use Besnovatyj\Modman\catalog\source\ComposerInstalledModuleSource;
-use Besnovatyj\Modman\catalog\source\FilesystemModuleSource;
 use Besnovatyj\Modman\compiler\ArtifactPaths;
 use Besnovatyj\Modman\compiler\AtomicWriter;
 use Besnovatyj\Modman\compiler\ConfigCompiler;
@@ -75,10 +74,7 @@ return function (Container $container): void {
     $container->setSingleton(ManifestFactory::class, ManifestFactory::class);
     $container->setSingleton(PackageCatalog::class, static fn(Container $c): PackageCatalog
         => new PackageCatalog(
-            sources: [
-                new FilesystemModuleSource($params['scanDirs']),
-                new ComposerInstalledModuleSource(),
-            ],
+            source: new ComposerInstalledModuleSource(),
             factory: $c->get(ManifestFactory::class),
             // Не-блокирующие проверки конвенций (WarningModule); расширение — добавить класс в список.
             warningChecks: [

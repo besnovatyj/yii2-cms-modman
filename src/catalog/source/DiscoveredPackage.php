@@ -24,8 +24,8 @@ final readonly class DiscoveredPackage
      *        отключён). Пути относительны корня пакета.
      * @param string[] $composerBootstrap классы из `extra.bootstrap` (L1 — yii2-composer выполняет их
      *        КАЖДЫЙ запрос, пока пакет установлен, вне гейта modman); нормализовано к списку.
-     * @param string $sourceReference SHA коммита из `source.reference` installed.json (есть только у
-     *        composer-источника). Точный сигнал «код на диске сменился»; для dev-версий заменяет тег.
+     * @param string $sourceReference SHA коммита из `source.reference` installed.json. Точный сигнал
+     *        «код на диске сменился»; для dev-версий заменяет тег.
      * @param string $sourceUrl git-URL из `source.url` installed.json — из него выводятся owner/repo
      *        для запроса upstream-версии к GitHub API (см. {@see githubSlug()}).
      */
@@ -42,16 +42,15 @@ final readonly class DiscoveredPackage
         public array      $require,
         public array      $autoloadPsr4,
         public array      $configPlugin,
-        public string     $sourceLabel,
         public array      $composerBootstrap = [],
         public string     $sourceReference = '',
         public string     $sourceUrl = '',
     ) {}
 
     /**
-     * Собирает DTO из распарсенного composer.json. Возвращает null, если это не похоже на пакет.
+     * Собирает DTO из записи пакета в installed.json. Возвращает null, если это не похоже на пакет.
      */
-    public static function fromComposerArray(array $data, string $path, string $sourceLabel): ?self
+    public static function fromInstalledPackage(array $data, string $path): ?self
     {
         if (!isset($data['name']) || !is_string($data['name'])) {
             return null;
@@ -80,7 +79,6 @@ final readonly class DiscoveredPackage
                 : (is_string($extra['bootstrap']) ? [$extra['bootstrap']] : []);
         }
 
-        // `source` есть только в installed.json (composer-источник); в сыром compos.json пакета — нет.
         $source = is_array($data['source'] ?? null) ? $data['source'] : [];
 
         return new self(
@@ -96,7 +94,6 @@ final readonly class DiscoveredPackage
             require: is_array($data['require'] ?? null) ? $data['require'] : [],
             autoloadPsr4: is_array($psr4) ? $psr4 : [],
             configPlugin: $configPlugin,
-            sourceLabel: $sourceLabel,
             composerBootstrap: $composerBootstrap,
             sourceReference: (string)($source['reference'] ?? ''),
             sourceUrl: (string)($source['url'] ?? ''),

@@ -33,6 +33,9 @@ use Yii;
  */
 final class ManifestFactory
 {
+    /** Версия кода без тега и без известного коммита. */
+    private const string DEV_VERSION = '0.0.0-dev';
+
     /**
      * Политика пер-аппликационного вклада (контракт {@see ProvidesAppConfig}): allowlist путей-ключей,
      * которые модуль вправе класть в конфиг приложения. Всё, чего здесь нет, вырезается.
@@ -104,7 +107,7 @@ final class ManifestFactory
         $config = $class::moduleConfig();
         $iconClass = (string)($config['params']['iconClass'] ?? '');
 
-        $version = $this->resolveVersion($package, $class);
+        $version = $this->resolveVersion($package);
         $requirements = $this->implementsContract($class, ProvidesDependencies::class)
             ? Requirements::fromArray($class::dependencies())
             : Requirements::empty();
@@ -139,21 +142,15 @@ final class ManifestFactory
     }
 
     /**
-     * Версия установленного на диске кода — авторитетный источник composer, а НЕ ручная константа.
+     * Версия установленного кода — только из метаданных composer, то есть из git.
      *
-     * Приоритет:
-     *  1. `composer` version из installed.json (реальный git-тег, например `v1.1.4`) — не дрейфует,
-     *     обновляется автоматически при `composer update`; смена тега меняет checksum → «обновление»
-     *     флагается само;
-     *  2. если composer отдаёт dev-ветку (`dev-master` у path/symlink-репо, где тега нет) — синтетика
-     *     `0.0.0-dev+<sha7>`: semver-сравнение осмысленно деградирует (dev всегда «ниже» релиза),
-     *     а фактическую смену кода ловит checksum по reference;
-     *  3. крайний fallback — константа {@see DeclaresModule::moduleVersion()} (нужна лишь когда источник
-     *     без composer-метаданных, например голый filesystem-скан без installed.json).
-     *
-     * @param class-string $class
+     *  1. Тег, по которому composer поставил пакет (`v1.1.4`). Обновляется при `composer update`; смена тега
+     *     меняет checksum, и «обновление» флагается само.
+     *  2. Ветка (`dev-master`, тега нет) — `0.0.0-dev+<sha7>` коммита из `source.reference`: dev всегда
+     *     «ниже» релиза, а смену кода ловит checksum по reference.
+     *  3. Нет ни тега, ни коммита (dist-установка ветки) — {@see self::DEV_VERSION}.
      */
-    private function resolveVersion(DiscoveredPackage $package, string $class): Version
+    private function resolveVersion(DiscoveredPackage $package): Version
     {
         $composer = trim($package->composerVersion);
 
@@ -162,10 +159,10 @@ final class ManifestFactory
         }
 
         if ($package->sourceReference !== '') {
-            return new Version('0.0.0-dev+' . $package->shortReference());
+            return new Version(self::DEV_VERSION . '+' . $package->shortReference());
         }
 
-        return new Version($class::moduleVersion());
+        return new Version(self::DEV_VERSION);
     }
 
     private function implementsContract(string $class, string $interface): bool

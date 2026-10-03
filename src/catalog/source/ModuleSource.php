@@ -11,9 +11,9 @@ namespace Besnovatyj\Modman\catalog\source;
 /**
  * Источник обнаружения пакетов.
  *
- * Полиморфизм discovery — то, чего не хватало старому modman (жёстко зашитый скан директорий).
- * Реализации: {@see FilesystemModuleSource} (dev/скан директорий), {@see ComposerInstalledModuleSource}
- * (прод/реестр composer). Источник НИКОГДА не грузит классы модулей — только читает composer.json.
+ * Модули попадают в систему только через composer, поэтому реализация одна —
+ * {@see ComposerInstalledModuleSource}. Абстракция отделяет каталог от формата реестра composer.
+ * Источник НИКОГДА не грузит классы модулей — только читает метаданные пакетов.
  */
 interface ModuleSource
 {
@@ -21,11 +21,6 @@ interface ModuleSource
      * @return DiscoveredPackage[]
      */
     public function discover(): array;
-
-    /**
-     * Человекочитаемая метка источника (для предупреждений/диагностики).
-     */
-    public function label(): string;
 
     /**
      * Предупреждения последнего вызова {@see discover()} (битый composer.json и т.п.).

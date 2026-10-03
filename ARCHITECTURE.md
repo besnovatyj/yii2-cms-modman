@@ -60,7 +60,8 @@
 Модуль реализует ровно то, что предоставляет; менеджер проверяет через `instanceof`. Это статически
 проверяемо, видно IDE и тестируемо.
 
-- `DeclaresModule` — ядро: `moduleId()`, `moduleVersion()`, `moduleConfig()`, `isEditable()`.
+- `DeclaresModule` — ядро: `moduleId()`, `moduleConfig()`, `isEditable()`. Версии в контракте нет —
+  она берётся из git через composer (см. §4).
 - `ProvidesDependencies` — `dependencies(): array` (оборачивается в `Requirements`).
 - `ProvidesComponents` — `components(): array`.
 - `ProvidesBootstrap` — `bootstrapClasses(): array`.
@@ -87,11 +88,11 @@
 - `Requirements`, `Contributions`, `RequiredDirectory` — типизированные части манифеста.
 - **Маркер `extra.bescms`** (`CmsMarker`/`CmsKind`) — единственный признак принадлежности пакета к CMS;
   каталог показывает только помеченные пакеты, чужие зависимости из `vendor/` игнорирует.
-- `source/ModuleSource` — интерфейс источника. Реализации:
-  - `FilesystemModuleSource` — скан директорий (`@modules`, `@root/packages/besnovatyj`);
-  - `ComposerInstalledModuleSource` — `vendor/composer/installed.json` (прод-путь).
-- `PackageCatalog` — агрегирует источники, кэширует на запрос, дедуплицирует один пакет из разных
-  источников по composer-имени. CMS-модули с ошибкой конфигурации собирает в `InvalidModule` (показ
+- `source/ModuleSource` — интерфейс источника; единственная реализация `ComposerInstalledModuleSource`
+  читает `vendor/composer/installed.json`. Модули — только composer-пакеты, локальных модулей нет.
+- **Версия модуля** — из `installed.json`: git-тег установки; для ветки — `0.0.0-dev+<sha7>` коммита
+  (`ManifestFactory::resolveVersion()`). Констант версии в модулях нет.
+- `PackageCatalog` — читает источник и кэширует на запрос. CMS-модули с ошибкой конфигурации собирает в `InvalidModule` (показ
   строкой с причиной + лог `modman/discovery`), а не валит ими список.
 
 ## 5. Реестр состояния (`registry/`)
