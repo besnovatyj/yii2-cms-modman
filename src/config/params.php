@@ -8,8 +8,6 @@ declare(strict_types=1);
 
 /**
  * Параметры системы управления модулями.
- *
- * На cutover достаточно заменить пути на канонические и вызвать recompile.
  */
 return [
     // Единый источник истины — реестр состояния (атомарный lock-файл).
@@ -21,8 +19,8 @@ return [
         '@modules',
     ],
 
-    // Производные артефакты, которые ещё компилирует modman. modules/components/bootstrap/appConfig/меню
-    // после переезда на yiisoft/config собираются движком по merge-plan и здесь не фигурируют.
+    // Производные артефакты modman. Yii-конфиг приложения (modules/components/bootstrap/меню админки)
+    // собирает движок yiisoft/config по merge-plan, отдельных артефактов у него нет.
     'artifacts' => [
         // Registry-gated лог-каналы устанавливаемых модулей (см. common/config/log.php).
         'logChannels' => '@config-dyn-gen/logChannelsConfigFile.php',
@@ -35,20 +33,6 @@ return [
         // Merge-plan для движка yiisoft/config (Yii3): [env][group][package][]=file. Читается
         // рантайм-обёрткой common\config\ConfigFactory. См. MergePlanCompiler.
         'mergePlan' => '@config-dyn-gen/merge-plan.php',
-    ],
-
-    // Локации меню (location => файл/включённость). Совпадает по смыслу с конфигом старого modman.
-    'menuLocations' => [
-        'left-sidebar' => ['file' => '@config-dyn-gen/menu-left-sidebar.php', 'enabled' => true],
-        'right-sidebar' => ['file' => '@config-dyn-gen/menu-right-sidebar.php', 'enabled' => true],
-        'top-menu' => ['file' => '@config-dyn-gen/menu-top.php', 'enabled' => false],
-        'header-quick-links' => ['file' => '@config-dyn-gen/menu-header-quick.php', 'enabled' => false],
-        'footer-menu' => ['file' => '@config-dyn-gen/menu-footer.php', 'enabled' => false],
-    ],
-
-    'menuDefaults' => [
-        'defaultPriority' => 500,
-        'defaultGroupPriority' => 500,
     ],
 
     // Путь для файлового мьютекса lifecycle-операций.

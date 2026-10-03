@@ -20,7 +20,6 @@ final readonly class Contributions
     /**
      * @param array<string, array>   $components   componentId => конфиг
      * @param array<int, string>      $bootstrap    список bootstrap-классов
-     * @param array                   $adminMenu    пункты меню (формат ProvidesAdminMenu)
      * @param array<int, \Besnovatyj\Contracts\dashboard\DashboardWidgetDescriptor> $dashboardWidgets
      *        плитки главной панели админки (формат ProvidesDashboardWidgets)
      * @param array                   $options      опции модуля
@@ -35,7 +34,6 @@ final readonly class Contributions
     public function __construct(
         public array   $components = [],
         public array   $bootstrap = [],
-        public array   $adminMenu = [],
         public array   $dashboardWidgets = [],
         public array   $options = [],
         public array   $logChannels = [],
@@ -49,10 +47,5 @@ final readonly class Contributions
     public function hasMigrations(): bool
     {
         return $this->migrationPath !== null;
-    }
-
-    public function hasAdminMenu(): bool
-    {
-        return $this->adminMenu !== [];
     }
 }

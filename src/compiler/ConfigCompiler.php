@@ -96,8 +96,7 @@ final class ConfigCompiler
     {
         $artifacts = $this->compile();
         $this->persist($artifacts);
-        // Параллельно со старыми артефактами пишем merge-plan для движка yiisoft/config (Yii3).
-        // На cutover старые артефакты уйдут, останется план. См. /TODO_YII3_CONFIG.MD.
+        // Merge-plan для движка yiisoft/config: по нему собираются Yii-конфиги приложений и меню админки.
         $this->mergePlanCompiler->recompile();
         return $artifacts;
     }

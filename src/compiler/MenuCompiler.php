@@ -8,40 +8,35 @@ declare(strict_types=1);
 
 namespace Besnovatyj\Modman\compiler;
 
+use Besnovatyj\Contracts\adminMenu\AdminMenuPlacement;
+use yii\base\InvalidConfigException;
+
 /**
- * Чистая сборка меню админки из вкладов модулей.
+ * Раскладка пунктов меню админки по локациям: группировка и сортировка по их размещениям.
  *
- * Перенос логики старого `AdminMenuManageService`, но как ДЕТЕРМИНИРОВАННАЯ функция от входных
- * пунктов меню: никаких `Yii::$app->modules`, файлов и побочных эффектов. На вход — «сырые» пункты
- * (из манифестов), на выходе — карта `location => дерево меню`. Запись в файлы — ответственность
- * {@see ConfigCompiler}.
+ * Вход — собранная группа `admin-menu`: плоский список пунктов `NavWidget`, у каждого в
+ * `_meta.placements` непустой список {@see AdminMenuPlacement} (формат пункта описан там же). Выход —
+ * дерево для `NavWidget` по каждой локации, в которую встал хотя бы один пункт; `_meta` срезается.
  *
- * Поддерживается новый формат с `_meta.placements` и легаси-формат (группа с `items`).
+ * Порядок: группы — по `groupPriority`, затем по заголовку; пункты внутри группы — по `priority`, затем
+ * по `label`. Пункты без группы сортируются среди групп одним блоком — как группа без заголовка.
+ *
+ * Чистая функция: без `Yii::$app`, файлов и побочных эффектов.
  */
 final class MenuCompiler
 {
-    /**
-     * @param string[]            $knownLocations известные locations (для инициализации)
-     * @param array<string,mixed> $defaults       defaultPriority/defaultGroupPriority
-     */
-    public function __construct(
-        private readonly array $knownLocations,
-        private readonly array $defaults = ['defaultPriority' => 500, 'defaultGroupPriority' => 500],
-    ) {}
+    /** Ключ блока пунктов без группы внутри локации (не пересекается с заголовками групп). */
+    private const string UNGROUPED = "\0ungrouped";
 
     /**
-     * @param array<int, array> $rawMenuItems плоский список пунктов меню из всех модулей
-     * @return array<string, array> location => дерево меню
+     * @param array<int, array> $items плоский список пунктов группы `admin-menu`
+     * @return array<string, array<int, array>> значение {@see \Besnovatyj\Contracts\adminMenu\AdminMenuLocation} => дерево меню
+     * @throws InvalidConfigException у пункта нет размещений или размещение не {@see AdminMenuPlacement}
      */
-    public function compile(array $rawMenuItems): array
+    public function compile(array $items): array
     {
         $byLocation = [];
-        foreach ($this->knownLocations as $location) {
-            $byLocation[$location] = [];
-        }
-
-        $grouped = $this->groupItemsByLocationAndGroup($rawMenuItems);
-        foreach ($grouped as $location => $groups) {
+        foreach ($this->groupByLocation($items) as $location => $groups) {
             $byLocation[$location] = $this->buildLocationMenu($groups);
         }
 
@@ -49,61 +44,25 @@ final class MenuCompiler
     }
 
     /**
-     * Раскладывает плоские пункты модулей в плоский список (с поддержкой одиночного пункта).
-     * @param array<int, array> $contributions каждый элемент — результат ProvidesAdminMenu::adminMenu()
-     * @return array<int, array>
+     * @param array<int, array> $items
+     * @return array<string, array<string, array{placement: AdminMenuPlacement, entries: array<int, array{placement: AdminMenuPlacement, item: array}>}>>
+     *         локация => ключ группы => группа (открывшее её размещение + пункты)
+     * @throws InvalidConfigException
      */
-    public function flatten(array $contributions): array
-    {
-        $items = [];
-        foreach ($contributions as $menu) {
-            if ($menu === []) {
-                continue;
-            }
-            if (isset($menu['label'])) {
-                $items[] = $menu; // одиночный пункт
-            } else {
-                foreach ($menu as $item) {
-                    if (is_array($item)) {
-                        $items[] = $item;
-                    }
-                }
-            }
-        }
-        return $items;
-    }
-
-    /**
-     * @param array<int, array> $rawMenuItems
-     * @return array<string, array<string, array>>
-     */
-    private function groupItemsByLocationAndGroup(array $rawMenuItems): array
+    private function groupByLocation(array $items): array
     {
         $grouped = [];
 
-        foreach ($rawMenuItems as $item) {
-            // Легаси-формат: группа с вложенными items без _meta.
-            if (isset($item['items']) && is_array($item['items']) && !isset($item['_meta']['placements'])) {
-                $this->processLegacyGroup($item, $grouped);
-                continue;
-            }
+        foreach ($items as $item) {
+            $menuItem = $item;
+            unset($menuItem['_meta']);
 
-            $placements = $item['_meta']['placements'] ?? [];
-            foreach ($placements as $placement) {
-                $location = $placement['location'] ?? 'left-sidebar';
-                $group = $placement['group'] ?? null;
-                $groupKey = $group ?? '__NO_GROUP__';
+            foreach ($this->placementsOf($item) as $placement) {
+                $location = $placement->location->value;
+                $groupKey = $placement->group ?? self::UNGROUPED;
 
-                $grouped[$location][$groupKey] ??= [
-                    'items' => [],
-                    'groupPriority' => $placement['groupPriority'] ?? $this->defaults['defaultGroupPriority'],
-                    'groupIcon' => $placement['groupIcon'] ?? null,
-                    'groupLabel' => $group,
-                ];
-
-                $menuItem = $this->stripMetadata($item);
-                $menuItem['_priority'] = $placement['priority'] ?? $this->defaults['defaultPriority'];
-                $grouped[$location][$groupKey]['items'][] = $menuItem;
+                $grouped[$location][$groupKey] ??= ['placement' => $placement, 'entries' => []];
+                $grouped[$location][$groupKey]['entries'][] = ['placement' => $placement, 'item' => $menuItem];
             }
         }
 
@@ -111,69 +70,57 @@ final class MenuCompiler
     }
 
     /**
-     * @param array<string, array<string, array>> $grouped
+     * @return AdminMenuPlacement[]
+     * @throws InvalidConfigException
      */
-    private function processLegacyGroup(array $item, array &$grouped): void
+    private function placementsOf(array $item): array
     {
-        $location = 'left-sidebar';
-        $groupLabel = $item['label'];
+        $label = (string)($item['label'] ?? '?');
+        $placements = $item['_meta']['placements'] ?? [];
 
-        $grouped[$location][$groupLabel] ??= [
-            'items' => [],
-            'groupPriority' => $this->defaults['defaultGroupPriority'],
-            'groupIcon' => $item['iconClass'] ?? 'bi bi-folder',
-            'groupLabel' => $groupLabel,
-        ];
-
-        foreach ($item['items'] as $subItem) {
-            $subItem['_priority'] = $this->defaults['defaultPriority'];
-            $grouped[$location][$groupLabel]['items'][] = $subItem;
+        if (!is_array($placements) || $placements === []) {
+            throw new InvalidConfigException("Пункт меню админки '{$label}': не задан `_meta.placements`.");
         }
+        foreach ($placements as $placement) {
+            if (!$placement instanceof AdminMenuPlacement) {
+                throw new InvalidConfigException(
+                    "Пункт меню админки '{$label}': размещение должно быть " . AdminMenuPlacement::class . '.'
+                );
+            }
+        }
+
+        return $placements;
     }
 
     /**
-     * @param array<string, array> $groups
+     * @param array<string, array{placement: AdminMenuPlacement, entries: array<int, array{placement: AdminMenuPlacement, item: array}>}> $groups
      * @return array<int, array>
      */
     private function buildLocationMenu(array $groups): array
     {
-        uasort($groups, function (array $a, array $b): int {
-            $pa = $a['groupPriority'] ?? 500;
-            $pb = $b['groupPriority'] ?? 500;
-            return $pa !== $pb ? $pa <=> $pb : strcmp((string)($a['groupLabel'] ?? ''), (string)($b['groupLabel'] ?? ''));
-        });
+        uasort($groups, static fn(array $a, array $b): int
+            => [$a['placement']->groupPriority, (string)$a['placement']->group]
+                <=> [$b['placement']->groupPriority, (string)$b['placement']->group]);
 
         $menu = [];
-        foreach ($groups as $groupKey => $groupData) {
-            $items = $groupData['items'];
-            usort($items, function (array $a, array $b): int {
-                $pa = $a['_priority'] ?? 500;
-                $pb = $b['_priority'] ?? 500;
-                return $pa !== $pb ? $pa <=> $pb : strcmp((string)($a['label'] ?? ''), (string)($b['label'] ?? ''));
-            });
+        foreach ($groups as $groupKey => $group) {
+            $entries = $group['entries'];
+            usort($entries, static fn(array $a, array $b): int
+                => [$a['placement']->priority, (string)($a['item']['label'] ?? '')]
+                    <=> [$b['placement']->priority, (string)($b['item']['label'] ?? '')]);
+            $items = array_column($entries, 'item');
 
-            foreach ($items as &$item) {
-                unset($item['_priority']);
-            }
-            unset($item);
-
-            if ($groupKey === '__NO_GROUP__') {
-                $menu = array_merge($menu, $items);
+            if ($groupKey === self::UNGROUPED) {
+                array_push($menu, ...$items);
             } else {
                 $menu[] = [
-                    'label' => $groupData['groupLabel'],
-                    'iconClass' => $groupData['groupIcon'] ?? 'bi bi-folder',
+                    'label' => $group['placement']->group,
+                    'iconClass' => $group['placement']->groupIcon,
                     'items' => $items,
                 ];
             }
         }
 
         return $menu;
-    }
-
-    private function stripMetadata(array $item): array
-    {
-        unset($item['_meta'], $item['_placements'], $item['_module_group'], $item['id']);
-        return $item;
     }
 }

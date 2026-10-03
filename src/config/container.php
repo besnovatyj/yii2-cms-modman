@@ -34,6 +34,7 @@ use Besnovatyj\Modman\lifecycle\step\CreateDirectoriesStep;
 use Besnovatyj\Modman\lifecycle\step\RemoveDirectoriesStep;
 use Besnovatyj\Modman\lifecycle\step\RevertMigrationsStep;
 use Besnovatyj\Modman\lifecycle\step\RunMigrationsStep;
+use Besnovatyj\Modman\menu\MenuProvider;
 use Besnovatyj\Modman\migration\MigrationOwnershipRepository;
 use Besnovatyj\Modman\migration\ModuleMigrationRunner;
 use Besnovatyj\Modman\migration\StandardMigrationHistory;
@@ -85,13 +86,12 @@ return function (Container $container): void {
             ],
         ));
 
-    // --- Компилятор --------------------------------------------------------------------------
-    $container->setSingleton(MenuCompiler::class, static fn(): MenuCompiler
-        => new MenuCompiler(array_keys($params['menuLocations']), $params['menuDefaults']));
+    // --- Меню админки: раскладка группы admin-menu по локациям на запросе ------------------------
+    $container->setSingleton(MenuCompiler::class, MenuCompiler::class);
+    $container->setSingleton(MenuProvider::class, static fn(Container $c): MenuProvider
+        => new MenuProvider($c->get(MenuCompiler::class)));
 
-    // Рантайм-сборка меню из группы admin-menu (yiisoft/config) — вместо сериализованных menu-*.php.
-    $container->setSingleton(\Besnovatyj\Modman\menu\MenuProvider::class, static fn(Container $c): \Besnovatyj\Modman\menu\MenuProvider
-        => new \Besnovatyj\Modman\menu\MenuProvider($c->get(MenuCompiler::class)));
+    // --- Компилятор --------------------------------------------------------------------------
     $container->setSingleton(ViewSourcesResolver::class, ViewSourcesResolver::class);
 
     // Merge-plan для yiisoft/config: root config-plugin читаем из корневого composer.json приложения.

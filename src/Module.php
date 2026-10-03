@@ -10,7 +10,6 @@ namespace Besnovatyj\Modman;
 
 use Besnovatyj\Kernel\module\CmsModule;
 use Besnovatyj\Contracts\module\DeclaresModule;
-use Besnovatyj\Contracts\module\ProvidesAdminMenu;
 use Besnovatyj\Contracts\module\ProvidesLogChannels;
 use Besnovatyj\Contracts\module\ProvidesOptions;
 use Yii;
@@ -32,7 +31,7 @@ use Yii;
  * `Besnovatyj\Modman\controllers`, путь `backend/modules` резолвится в controllers\backend\ModulesController).
  * Console-маршруты: `Modman/modules/...` (controllerNamespace переключается на commands).
  */
-final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMenu, ProvidesLogChannels, ProvidesOptions
+final class Module extends CmsModule implements DeclaresModule, ProvidesLogChannels, ProvidesOptions
 {
     /** Версия менеджера — источник истины для отображения и будущего самообновления. */
     public const string VERSION = '1.0.0';
@@ -70,11 +69,6 @@ final class Module extends CmsModule implements DeclaresModule, ProvidesAdminMen
     public static function isEditable(): bool
     {
         return false;
-    }
-
-    public static function adminMenu(): array
-    {
-        return require __DIR__ . '/config/adminMenu.php';
     }
 
     public static function logChannels(): array

@@ -13,7 +13,6 @@ use Besnovatyj\Modman\catalog\exception\ManifestException;
 use Besnovatyj\Modman\catalog\source\DiscoveredPackage;
 use Besnovatyj\Contracts\dashboard\ProvidesDashboardWidgets;
 use Besnovatyj\Contracts\module\DeclaresModule;
-use Besnovatyj\Contracts\module\ProvidesAdminMenu;
 use Besnovatyj\Contracts\module\ProvidesAppConfig;
 use Besnovatyj\Contracts\module\ProvidesBootstrap;
 use Besnovatyj\Contracts\module\ProvidesComponents;
@@ -113,7 +112,6 @@ final class ManifestFactory
         $contributions = new Contributions(
             components: $this->implementsContract($class, ProvidesComponents::class) ? $class::components() : [],
             bootstrap: $this->implementsContract($class, ProvidesBootstrap::class) ? array_values($class::bootstrapClasses()) : [],
-            adminMenu: $this->implementsContract($class, ProvidesAdminMenu::class) ? $class::adminMenu() : [],
             dashboardWidgets: $this->implementsContract($class, ProvidesDashboardWidgets::class) ? $class::dashboardWidgets() : [],
             options: $this->implementsContract($class, ProvidesOptions::class) ? $class::options() : [],
             logChannels: $this->implementsContract($class, ProvidesLogChannels::class) ? $class::logChannels() : [],
@@ -234,7 +232,7 @@ final class ManifestFactory
      * Контрольная сумма функционального состояния манифеста.
      *
      * Включает только то, что влияет на установку/обновление (для детекции изменений при update).
-     * Меню и `config` исключены: они могут содержать Closure и являются производными/косметическими.
+     * `config` исключён: он может содержать Closure и является производным/косметическим.
      */
     private function checksum(
         DiscoveredPackage $package,

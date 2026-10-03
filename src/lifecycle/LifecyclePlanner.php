@@ -176,7 +176,7 @@ final class LifecyclePlanner
             $steps[] = new PlannedStep('Создать директории модуля', implode(', ', $paths));
         }
         $steps[] = new PlannedStep('Записать состояние в реестр (commit)', $manifest->id);
-        $steps[] = new PlannedStep('Перекомпилировать конфигурацию (modules/bootstrap/components/log/menu)');
+        $steps[] = new PlannedStep('Перекомпилировать конфигурацию (merge-plan, лог-каналы, опции, источники представлений, плитки дашборда)');
         return $steps;
     }
 

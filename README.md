@@ -4,12 +4,10 @@
 единично (реестр), а вся Yii-конфигурация — производная и компилируется заново. Модуль на стадии
 тестирования.
 
-Пришла на смену прежнему патч-based `modman`, который сохранён как образец в `app/modules/modman_b`
-(нерабочий, для сверки). Артефакты пишутся в **канонические** пути конфигурации приложения — без
-суффиксов и аддитивных слияний.
+Пришла на смену прежнему патч-based `modman`. Артефакты пишутся в **канонические** пути конфигурации
+приложения — без суффиксов и аддитивных слияний.
 
 - Идея и слои — [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Пошаговый трекер и журнал решений — [plan.md](./plan.md)
 - Сравнение «патч-modman → modman» — таблица в ARCHITECTURE.md §12
 
 ## Карта каталога
@@ -18,13 +16,15 @@
 catalog/      ModuleManifest + value-объекты, discovery (Filesystem/Composer), ManifestFactory,
               PackageCatalog, InvalidModule, маркер CmsMarker/CmsKind (extra.bescms)
 registry/     ModuleStatus, Version, ModuleState, ModuleRegistry (атомарный lock-файл — источник истины)
-compiler/     AtomicWriter, ConfigCompiler (чистая компиляция), MenuCompiler, ArtifactPaths
+compiler/     AtomicWriter, ConfigCompiler (чистая компиляция), MergePlanCompiler, ArtifactPaths,
+              MenuCompiler (раскладка пунктов меню админки по локациям)
+menu/         MenuProvider — меню админки по локациям на запросе (группа admin-menu)
 deps/         SemverConstraint, DependencyGraph, DependencyResolver (прямые + обратные зависимости)
 migration/    MigrationOwnershipRepository, ModuleMigrationRunner (учёт владения, pending-only update)
 lifecycle/    Planner/Executor/Steps/Handlers (mutex, commit-at-end, компенсация, reconcile, sync)
 events/       ModuleLifecycleDispatcher (app-level шина межмодульных интеграций)
 controllers/  backend/ModulesController (веб-интерфейс)
-commands/     ModulesController + MenuController (консольные драйверы поверх того же фасада)
+commands/     ModulesController (консольный драйвер поверх того же фасада)
 ModuleManager.php  фасад — единый публичный API для драйверов
 ```
 
@@ -46,10 +46,11 @@ ModuleManager.php  фасад — единый публичный API для д�
 менеджер обязан работать, чтобы скомпилировать конфиги, поэтому его проводка — глобальная, а не из
 компилируемого артефакта.
 
-**2. Компилируемые артефакты — это и есть конфиг приложения.** Менеджер пишет в канонические пути
-(`@config-dyn-gen/modulesConfigFile.php`, `componentsConfigFile.php`, `logChannelsConfigFile.php`,
-`menu-*.php`, …), которые приложение и так загружает. Никаких `_new` и аддитивного слияния — это
-основной конфиг.
+**2. Merge-plan — это и есть конфиг приложения.** Менеджер пишет `@config-dyn-gen/merge-plan.php`:
+какие `extra.config-plugin`-файлы активных модулей входят в какую группу движка yiisoft/config
+(`common`, `app-*`, `admin-menu`). Приложение собирает по нему свой конфиг, а админка — меню
+(см. «Меню админки» ниже). Рядом лежат артефакты, которые движком не покрываются: лог-каналы, реестр
+опций, манифест источников представлений, плитки дашборда (`params.artifacts`).
 
 **3. Холодный старт — автоматический.** `Bootstrap` (шаг 1) сам регистрирует модуль `Modman` в
 приложении (`Application::setModule`), поэтому менеджер доступен даже когда `modulesConfigFile.php`
@@ -65,7 +66,7 @@ ARCHITECTURE §6); саморегистрация в bootstrap — постоя�
 
 **Веб:** `/Modman/backend/modules/index` — список модулей/пакетов (фильтры по статусу/обновлениям,
 сортировка, пагинация), «План» (dry-run), установка, обновление, удаление, «Сверка» (reconcile),
-«Пересобрать конфиг», «Пересобрать меню». (`sync` — пока только в консоли, см. ниже.)
+«Пересобрать конфиг», «Итоговый конфиг». (`sync` — пока только в консоли, см. ниже.)
 
 **Консоль:**
 
@@ -78,11 +79,29 @@ php yii Modman/modules/uninstall <moduleId>
 php yii Modman/modules/reconcile
 php yii Modman/modules/sync [--adoptAll]   # пересобрать реестр из реальности (см. ниже)
 php yii Modman/modules/recompile
-php yii Modman/menu/info       # диагностика локаций меню (вкл/выкл, файл, существование, число пунктов)
-php yii Modman/menu/rebuild    # перекомпилировать только артефакты меню
 ```
 
 (Для консоли модуль также должен быть в `modules` console-приложения.)
+
+## Меню админки
+
+Меню не компилируется в файлы: его собирают на каждом запросе админки из группы `admin-menu`.
+
+1. Модуль кладёт пункты в `src/config/adminMenu.php` и объявляет файл в `composer.json`:
+   `extra.config-plugin.admin-menu: "src/config/adminMenu.php"`. Пункт — обычный пункт `NavWidget` с
+   `_meta.placements`: списком `Besnovatyj\Contracts\adminMenu\AdminMenuPlacement` (там же описан формат).
+   Локации — только из `AdminMenuLocation`; правила сортировки — докблок `compiler/MenuCompiler`.
+   Пункт без размещений или с размещением другого типа — `InvalidConfigException` при раскладке.
+2. При install/update/uninstall/recompile файл попадает в merge-plan только у активного модуля.
+3. На запросе движок yiisoft/config `require`-ит файлы активных модулей (замыкания `active` остаются
+   живыми) и склеивает их в плоский список. `MenuProvider::forLocation()` раскладывает его по локациям
+   один раз за запрос.
+4. Потребители берут свою локацию по имени и сами фильтруют пункты правами
+   (`Besnovatyj\Kernel\security\MenuAccessFilter`): сайдбары layout'а админки (`LeftSidebar`,
+   `RightSidebar`), модуль admin-panel (шапка `HeaderQuickLinks`, палитра команд, страница настроек).
+
+Правка содержимого `adminMenu.php` не требует recompile (на проде, как и любой PHP-код, — после сброса
+OPcache). Recompile нужен только при изменении состава модулей или их `extra.config-plugin`.
 
 ### `sync` — восстановление реестра из фактического состояния
 

@@ -11,8 +11,9 @@
 Из этого закона вытекает всё остальное:
 
 - единственный изменяемый источник истины — **реестр** (`ModuleRegistry`, атомарный lock-файл);
-- все Yii-конфиги (`modules`, `bootstrap`, `components`, `logChannels`, меню) — **производные**,
-  собираются `ConfigCompiler` целиком из `(реестр × манифесты)`;
+- все Yii-конфиги (`modules`, `bootstrap`, `components`, `logChannels`, меню админки) — **производные**
+  от `(реестр × манифесты)`: `ConfigCompiler` пишет merge-plan (по нему движок yiisoft/config собирает
+  конфиги приложений и группу меню `admin-menu`) и артефакты, которые движком не покрываются;
 - запись артефактов — только `tmp + rename()` (атомарно), без `*_backup`;
 - откат операции = «вернуть прежний реестр и перекомпилировать», а не N точечных компенсаций;
 - финальная запись реестра — **последний** шаг (commit-at-end): пока он не выполнен, снаружи
@@ -63,7 +64,6 @@
 - `ProvidesDependencies` — `dependencies(): array` (оборачивается в `Requirements`).
 - `ProvidesComponents` — `components(): array`.
 - `ProvidesBootstrap` — `bootstrapClasses(): array`.
-- `ProvidesAdminMenu` — `adminMenu(): array`.
 - `ProvidesOptions` — `options(): array`.
 - `ProvidesLogChannels` — `logChannels(): array`.
 - `ProvidesMigrations` — `migrationPath(): string`, `migrationNamespace(): ?string`.
@@ -113,7 +113,10 @@
 - `ConfigCompiler` — **чистая** функция: из реестра + манифестов собирает все конфиги целиком.
   **Системные модули** (`editable=false`, например сам менеджер) компилируются ВСЕГДА, даже без записи
   в реестре: они ставятся ядром/бутстрапом, иначе их конфиг и меню вымывались бы при каждой `recompile`.
-- `MenuCompiler` — сборка меню по locations/группам/приоритетам (как чистая функция от манифестов).
+- `MenuCompiler` — раскладка пунктов меню админки по локациям/группам/приоритетам; чистая функция от
+  собранной группы `admin-menu`. Вызывается на запросе через `menu/MenuProvider`, в файлы не пишется.
+  Меню — не контракт модуля, а config-plugin файл `adminMenu.php`; формат размещения и список локаций —
+  `Besnovatyj\Contracts\adminMenu\AdminMenuPlacement` / `AdminMenuLocation`.
 - `CompiledArtifacts` — DTO результата компиляции (что и куда записать).
 
 Критерий корректности: повторная install/uninstall даёт **побайтово те же** артефакты

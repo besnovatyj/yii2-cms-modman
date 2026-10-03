@@ -8,16 +8,17 @@ declare(strict_types=1);
 
 namespace Besnovatyj\Modman\menu;
 
+use Besnovatyj\Contracts\adminMenu\AdminMenuLocation;
 use Besnovatyj\Modman\compiler\MenuCompiler;
+use yii\base\InvalidConfigException;
 
 /**
- * Рантайм-сборка меню из вкладов группы `admin-menu` (yiisoft/config).
+ * Меню админки по локациям для текущего запроса.
  *
- * После перехода на yiisoft/config меню больше не сериализуются в `menu-*.php` (замыкания `active`
- * не переживают var_export). Вместо этого модули объявляют adminMenu через `extra.config-plugin`
- * (группа `admin-menu`), их вклады `require`-ятся с ЖИВЫМИ замыканиями и компилируются здесь по
- * placement/priority ({@see MenuCompiler}) на запросе. Результат мемоизируется на время запроса
- * (синглтон DI), поэтому оба сайдбара компилируют меню один раз.
+ * Пункты — собранная группа `admin-menu` (формат пункта — {@see \Besnovatyj\Contracts\adminMenu\AdminMenuPlacement},
+ * правила раскладки — {@see MenuCompiler}). Раскладка
+ * выполняется один раз и мемоизируется на запрос (синглтон DI): сайдбары, шапка и палитра команд
+ * читают одно и то же разложенное меню.
  */
 final class MenuProvider
 {
@@ -29,16 +30,21 @@ final class MenuProvider
     ) {}
 
     /**
-     * Пункты меню для конкретной локации (left-sidebar, right-sidebar, …).
+     * Дерево пунктов одной локации.
      *
-     * @param string $location Локация меню.
-     * @param array  $contributions Слитые вклады группы `admin-menu` (список пунктов с `_meta.placements`).
-     * @return array Дерево пунктов для локации (ещё не отфильтровано по правам — это делает вызывающий).
+     * Пункты раскладываются при ПЕРВОМ вызове за запрос; все вызывающие передают одну и ту же группу
+     * `admin-menu`, поэтому `$items` последующих вызовов не перечитываются.
+     *
+     * @param AdminMenuLocation $location Локация.
+     * @param array             $items    Собранная группа `admin-menu` (плоский список пунктов с `_meta.placements`).
+     * @return array Дерево для NavWidget (ещё не отфильтровано по правам — это делает вызывающий);
+     *               пустой массив, если в локацию не встал ни один пункт.
+     * @throws InvalidConfigException пункт меню без корректных размещений
      */
-    public function forLocation(string $location, array $contributions): array
+    public function forLocation(AdminMenuLocation $location, array $items): array
     {
-        $this->byLocation ??= $this->compiler->compile($this->compiler->flatten($contributions));
+        $this->byLocation ??= $this->compiler->compile($items);
 
-        return $this->byLocation[$location] ?? [];
+        return $this->byLocation[$location->value] ?? [];
     }
 }
